@@ -6,11 +6,24 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:44:16 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/27 10:55:35 by mamazzal         ###   ########.fr       */
+/*   Updated: 2023/12/27 19:46:08 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "main.h"
+
+void display_config(std::vector<std::vector<t_config> > http_config) {
+  std::vector<std::vector<t_config> >::iterator start = http_config.begin();
+  for (; start != http_config.end(); start++) {
+    std::vector<t_config> conf_data = *start;
+    for (size_t j = 0; j < conf_data.size(); j++) {
+      t_config conf = conf_data[j];
+      std::cout << "SERVER_NAME : " << conf.server_name + "\n";
+      std::cout << "PORT : " << conf.port << "\n";
+    }
+    std::cout << "++++++\n";
+  }
+}
 
 int main(int argc, char __unused **argv) {
   if (argc != 2) {
@@ -18,6 +31,8 @@ int main(int argc, char __unused **argv) {
     return 1;
   }
   try {
+    Config server;
+    server.parsConfigFile(argv[1]);
   } catch (std::exception & e) {
     std::cout << e.what() << std::endl;
   }

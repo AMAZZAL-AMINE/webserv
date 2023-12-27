@@ -6,13 +6,13 @@
 #    By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 10:49:29 by mamazzal          #+#    #+#              #
-#    Updated: 2023/12/27 10:51:27 by mamazzal         ###   ########.fr        #
+#    Updated: 2023/12/27 19:16:20 by mamazzal         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME=webserv
 
-SRC= main.cpp
+SRC= main.cpp parsing/Config.cpp atoi.cpp
 OBJ=$(SRC:.cpp=.o)
 
 FLAGS=-Wall -Wextra -Werror -std=c++98
@@ -21,6 +21,9 @@ FLAGS=-Wall -Wextra -Werror -std=c++98
 	c++ $(FLAGS) -c $< -o $@
 
 all: $(NAME)
+
+run : all
+	@./$(NAME) webserv.conf
 
 $(NAME): $(OBJ)
 	c++ $(FLAGS) $(OBJ) -o $(NAME)

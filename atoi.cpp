@@ -1,35 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   exceptionErrors.hpp                                :+:      :+:    :+:   */
+/*   atoi.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/12/27 10:52:15 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/27 20:00:53 by mamazzal         ###   ########.fr       */
+/*   Created: 2023/12/27 19:12:33 by mamazzal          #+#    #+#             */
+/*   Updated: 2023/12/27 19:26:55 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef EXCEPTIONERRORS_HPP
-#define EXCEPTIONERRORS_HPP
-
 #include "main.h"
 
-
-class HttpConfig : public std::exception {
-  public : 
-    const char *what() const throw() {
-      return "Exception Error : bad http config";
+int _atoi_(std::string  str) {
+  int ismis = 1;
+  size_t count = 0;
+  int result = 0;
+  if (str[0] == '-' || str[0] == '+') {
+    if (str[0] == '-')
+      ismis = -1;
+    count++;
   }
-};
-
-class confFileError : public std::exception {
-  public : 
-    const char *what() const throw() {
-      return "Exception Error : config file";
+  while (std::isdigit(str[count]) && count < str.length()) {
+    result = (result * 10) + str[count] - 48;
+    count++;
   }
-};
 
+  result = result * ismis;
 
-
-#endif
+  return result;
+}
