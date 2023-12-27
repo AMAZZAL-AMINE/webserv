@@ -1,26 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.h                                             :+:      :+:    :+:   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/27 22:49:15 by mamazzal         ###   ########.fr       */
+/*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
+/*   Updated: 2023/12/27 22:49:18 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include "parsing/Config.hpp"
-#include "exceptionErrors.hpp"
-#include "server/Server.hpp"
+#include "../main.h"
 
-int _atoi_(std::string  str);
-void display_config(std::vector<std::vector<t_config> > http_config);
+class Server {
+  private:
+  public : 
+    Server();
+    void listen();
+    ~Server();
+};
 
 #endif
