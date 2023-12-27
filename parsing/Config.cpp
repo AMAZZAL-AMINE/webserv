@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/27 20:15:09 by mamazzal         ###   ########.fr       */
+/*   Updated: 2023/12/27 20:18:29 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,11 @@ void Config::parsConfigFile(std::string confFile) {
     if (!conf.empty())
       this->http_config.push_back(conf);
   }
-  display_config(this->http_config);
+}
+
+
+const std::vector<std::vector<t_config> > &  Config::getConfig() const {
+  return this->http_config;
 }
 
 Config::~Config() {}
