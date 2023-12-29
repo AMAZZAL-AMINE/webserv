@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/27 22:49:18 by mamazzal         ###   ########.fr       */
+/*   Updated: 2023/12/29 15:37:47 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,10 @@
 
 class Server {
   private:
+    std::string httpRes;
   public : 
     Server();
-    void listen();
+    void serve();
     ~Server();
 };
 
