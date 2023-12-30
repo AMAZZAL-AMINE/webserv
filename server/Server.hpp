@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/29 15:37:47 by mamazzal         ###   ########.fr       */
+/*   Updated: 2023/12/30 10:35:13 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ class Server {
     std::string httpRes;
   public : 
     Server();
-    void serve();
+    void serve(const t_config & data);
     ~Server();
 };
 

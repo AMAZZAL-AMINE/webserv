@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:44:16 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/29 11:03:05 by mamazzal         ###   ########.fr       */
+/*   Updated: 2023/12/30 11:07:30 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,8 @@ int main(int argc, char __unused **argv) {
     Config sttp_pars;
     sttp_pars.parsConfigFile(argv[1]);
     Server server;
-    display_config(sttp_pars.getConfig());
-    server.serve();
+    // display_config(sttp_pars.getConfig());
+    server.serve(sttp_pars.getConfig().at(0).at(0));
   } catch (std::exception & e) {
     std::cout << e.what() << std::endl;
   }
