@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/30 14:52:10 by mamazzal         ###   ########.fr       */
+/*   Updated: 2023/12/31 18:16:43 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,12 +45,15 @@ void Server::serve(const t_config & data) {
     fds[0].events = POLLIN;  // Monitor for incoming connection requests
     fds[1].fd = -1;          // Initialize client socket to -1 (no client initially)
     fds[1].events = POLLIN;
+    std::cout << "server runing on "<< std::endl;
+    std::cout << "      local : localhost:" << data.port << std::endl;
+    std::cout << "      network : 10.11.3.5:" << data.port << std::endl;
     for (;;) {
         poll(fds, 2, -1);
         if (fds[0].revents & POLLIN) {
             fds[1].fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
             fds[1].events = POLLIN;
-            std::cout << "-----------New client connected-------\n" << std::endl;
+            std::cout << "\033[1;36m----------- New client connected -------\033[0m\n" << std::endl;
         }
         if (fds[1].revents & POLLIN) {
             client_fd = fds[1].fd;
