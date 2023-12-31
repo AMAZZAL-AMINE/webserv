@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/31 18:16:43 by mamazzal         ###   ########.fr       */
+/*   Updated: 2023/12/31 19:57:20 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ int setup_server(const t_config & data, sockaddr_in & address) {
 
 void Server::serve(const t_config & data) {
     int server_fd, client_fd;
-    char buffer[1024] = {0};
+    char buffer[30000] = {0};
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);
@@ -48,6 +48,7 @@ void Server::serve(const t_config & data) {
     std::cout << "server runing on "<< std::endl;
     std::cout << "      local : localhost:" << data.port << std::endl;
     std::cout << "      network : 10.11.3.5:" << data.port << std::endl;
+    listen(server_fd, 3);
     for (;;) {
         poll(fds, 2, -1);
         if (fds[0].revents & POLLIN) {
@@ -57,13 +58,14 @@ void Server::serve(const t_config & data) {
         }
         if (fds[1].revents & POLLIN) {
             client_fd = fds[1].fd;
-            ssize_t rs =  read(client_fd, buffer, 1024);
-            if (rs == 0) {
+            ssize_t rs = read(client_fd, buffer, sizeof(buffer) - 1);
+            if (rs <= 0) {
                 std::cout << "Client disconnected" << std::endl;
                 close(client_fd);
                 fds[1].fd = -1;
                 continue;
-            }else {
+            } else {
+                buffer[rs] = '\0'; // Null-terminate the received data
                 std::cout << buffer << std::endl;
                 send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
                 close(client_fd);
