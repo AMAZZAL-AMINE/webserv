@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/01 13:06:34 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/01 15:16:03 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ int setup_server(const t_config & data, sockaddr_in & address) {
 
 void Server::serve(const t_config & data) {
     int server_fd, client_fd;
-    char buffer[30000] = {0};
+    char buffer[3000] = {0};
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);
@@ -66,16 +66,25 @@ void Server::serve(const t_config & data) {
                 continue;
             } else {
                 buffer[rs] = '\0'; // Null-terminate the received data
-                // std::cout << buffer << std::endl;
+                std::cout << buffer << std::endl;
                 t_request req = pars(buffer);
                 std::cout << "\033[1;32m----------- Request -------\033[0m\n" << std::endl;
-                std::cout << "method : " << req.method << std::endl;
-                std::cout << "path : " << req.path << std::endl;
-                std::cout << "http_version : " << req.http_version << std::endl;
+                // std::cout << "method : " << req.method << std::endl;
+                // std::cout << "path : " << req.path << std::endl;
+                // std::cout << "http_version : " << req.http_version << std::endl;
                 if (req.method == "GET" && req.path == "/")
                     send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-                else if (req.method == "GET" && req.path == "/favicon.ico")
-                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                else if (req.method == "GET" && std::string(buffer).find("Sec-Fetch-Dest: image")) {
+                    const char* relativePath = req.path.c_str() + 1;
+                    char resolvedPath[PATH_MAX];
+                    std::string line, htmlData = "";
+                    realpath(relativePath, resolvedPath);
+                    std::ifstream file(resolvedPath, std::ios::binary);
+                    htmlData.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                    std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: image/ong\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+                    std::cout << "GGG => " << resolvedPath << std::endl;
+                    send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+                }
                 else
                     send(client_fd, "HTTP/1.1 404 Not Found\n\n", 23, 0);
                 close(client_fd);
