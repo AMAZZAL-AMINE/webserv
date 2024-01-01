@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/31 19:23:28 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/01 12:58:05 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,19 +29,19 @@
 #include <poll.h>
 
 typedef struct t_requ {
-    char *method;
-    char *path;
-    char *version;
-    char *host;
-    char *user_agent;
-    char *accept;
-    char *accept_language;
-    char *accept_encoding;
-    char *connection;
-    char *cookie;
-    char *content_type;
-    char *content_length;
-    char *body;
+    std::string method;
+    std::string path;
+    std::string http_version;
+    std::string host;
+    std::string user_agent;
+    std::string accept;
+    std::string accept_language;
+    std::string accept_encoding;
+    std::string connection;
+    std::string cookie;
+    std::string content_type;
+    std::string content_length;
+    std::string body;
 } t_request;
 
 

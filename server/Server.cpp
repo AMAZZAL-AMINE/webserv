@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/31 19:57:20 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/01 13:06:34 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ void Server::serve(const t_config & data) {
         if (fds[0].revents & POLLIN) {
             fds[1].fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
             fds[1].events = POLLIN;
-            std::cout << "\033[1;36m----------- New client connected -------\033[0m\n" << std::endl;
+            // std::cout << "\033[1;36m----------- New client connected -------\033[0m\n" << std::endl;
         }
         if (fds[1].revents & POLLIN) {
             client_fd = fds[1].fd;
@@ -66,8 +66,18 @@ void Server::serve(const t_config & data) {
                 continue;
             } else {
                 buffer[rs] = '\0'; // Null-terminate the received data
-                std::cout << buffer << std::endl;
-                send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                // std::cout << buffer << std::endl;
+                t_request req = pars(buffer);
+                std::cout << "\033[1;32m----------- Request -------\033[0m\n" << std::endl;
+                std::cout << "method : " << req.method << std::endl;
+                std::cout << "path : " << req.path << std::endl;
+                std::cout << "http_version : " << req.http_version << std::endl;
+                if (req.method == "GET" && req.path == "/")
+                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                else if (req.method == "GET" && req.path == "/favicon.ico")
+                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                else
+                    send(client_fd, "HTTP/1.1 404 Not Found\n\n", 23, 0);
                 close(client_fd);
                 fds[1].fd = -1;
             }
