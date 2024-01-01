@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/29 12:05:18 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/01 18:05:55 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,10 @@ void Config::parsConfigFile(std::string confFile) {
           s_conf.port = _atoi_(grepValue(line, "port"));
         else if (line.find("server_name") == 2)
           s_conf.server_name =  grepValue(line, "server_name");
+        else if (line.find("error_page 404") == 2)
+          s_conf.error404 =  grepValue(line, "error_page 404");
+        else if (line.find("error_page 500") == 2)
+          s_conf.error500 =  grepValue(line, "error_page 500");
         else
            throw confFileError();
       }
