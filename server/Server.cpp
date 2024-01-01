@@ -6,22 +6,22 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/01 18:49:50 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/01 22:56:55 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../main.h"
-
+#include <sstream> 
 std::string get_response_message(std::string fhtml) {
     char resolvedPath[PATH_MAX];
     realpath(fhtml.c_str(), resolvedPath);
     std::fstream file(resolvedPath);
     if (!file.is_open())
         return "error";
-    std::string line, htmlData;
-    while (std::getline(file, line))
-        htmlData += line;
-    return htmlData;
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    file.close();
+    return buffer.str();
 }
 
 Server::Server() {
@@ -51,6 +51,7 @@ void image_response(t_request & req, int client_fd) {
     std::ifstream file(resolvedPath, std::ios::binary);
     htmlData.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: image/ong\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+    file.close();
     send(client_fd, httpRes.c_str(), httpRes.length(), 0);
 }
 
