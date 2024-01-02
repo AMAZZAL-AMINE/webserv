@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/02 12:52:53 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/02 15:23:14 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,4 +35,5 @@
 int _atoi_(std::string  str);
 void display_config(std::vector<std::vector<t_config> > http_config);
 t_request pars(std::string gg);
+HttpRequest parseHttpRequest(const std::string& request);
 #endif

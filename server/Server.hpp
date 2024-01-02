@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/02 13:30:16 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/02 18:54:10 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,14 @@
 #define SERVER_HPP
 
 #include "../main.h"
+
+typedef struct HttpRequest {
+    std::string method;
+    std::string path;
+    std::string version;
+    std::vector<std::string> headers;
+} HttpRequest;
+
 
 typedef struct t_requ {
     std::string method;
@@ -37,10 +45,13 @@ typedef struct t_requ {
 class Server {
   private:
     std::string httpRes;
+    std::string badRequest;
+    std::string timeout;
   public : 
     Server();
     void serve(const t_config & data);
     ~Server();
 };
+
 
 #endif

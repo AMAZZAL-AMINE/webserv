@@ -11,103 +11,31 @@ std::string get_method(std::string gg) {
   return data;
 }
 
-std::string get_path(std::string gg, int start) {
-  std::string data;
-  for (int i = start; gg[i] != ' '; i++) {
-    if (gg[i] == '\0')
-      return "error";
-    data += gg[i];
-  }
-  return data;
-}
-
-std::string get_http_version(std::string gg, int start) {
-  std::string data;
-  for (int i = start; gg[i] != '\n'; i++) {
-    if (gg[i] == '\0')
-      return "error";
-    data += gg[i];
-  }
-  return data;
-}
-
-std::string get_host(std::string gg, int start) {
-  std::string data;
-  int j;
-  for (j = start; gg[j] != ' '; j++)
-  {
-  }
-  j++;
-  for (int i = j; gg[i] != '\n'; i++) {
-    if (gg[i] == '\0')
-      return "error";
-    data += gg[i];
-  }
-  return data;
-}
-
-std::string get_conection(std::string gg, int start) {
-  std::string data;
-  int j;
-  for (j = start; gg[j] != ' '; j++)
-  {
-  }
-  j++;
-  for (int i = j; gg[i] != '\n'; i++) {
-    if (gg[i] == '\0')
-      return "error";
-    data += gg[i];
-  }
-  return data;
-}
-
-std::string get_(std::string gg, int start) 
-{
-  std::string data;
-    int j = 0;
-    int pos = start;
-    for (j = start; gg[j] != '\n'; j++) {
-      pos++;
-    }
-    j++;
-    pos++;
-    for (int i = j; gg[i] != ' '; i++)
-    {
-      pos++;
-    }
-    j++;
-    pos++;
-    for (int i = pos; gg[i] != '\n'; i++)
-    {
-        if (gg[i] == '\0') {
-            return "error";
-        }
-        data += gg[i];
-    }
-    return data;
-}
 
 t_request pars(std::string gg)
 {
-  t_request data;
-  int size = 0;
-  data.method = get_method(gg);
-  size = data.method.size();
-  data.path = get_path(gg, size + 1);
-  size += data.path.size();
-  data.http_version = get_http_version(gg, size + 1);
-  size += data.http_version.size();
-  data.host = get_host(gg, size + 1);
-  size += data.host.size();
-  data.connection = get_conection(gg, size + 1);
+    t_request data;
+    std::cout << gg << std::endl;
+    data.method = get_method(gg);
+    return data;
+}
 
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <string>
 
-  size += data.connection.size();
-  data.user_agent = get_(gg, size + 1);
-  size += data.user_agent.size();
-  data.accept = get_(gg, size + 1);
-  size += data.accept.size();
-  data.Sec_GPC = get_(gg, size + 1);
- 
-  return data;
+HttpRequest parseHttpRequest(const std::string & request) {
+  HttpRequest httpRequest;
+  if (request.find("Transfer-Encoding") != SIZE_T_MAX)
+    std::cout << "HELLO DDD\n";
+  std::istringstream stream(request);
+  stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
+  std::string header;
+  while (std::getline(stream, header)) {
+    if (header == "\r")
+      continue;
+    httpRequest.headers.push_back(header);
+  }
+  return httpRequest;
 }
