@@ -6,7 +6,7 @@
 /*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/02 12:10:45 by rouali           ###   ########.fr       */
+/*   Updated: 2024/01/02 12:11:49 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,7 +111,6 @@ void Server::serve(const t_config & data) {
                 buffer[rs] = '\0';
                 t_request req = pars(buffer);
                 std::cout << "\033[1;32m----------- Request -------\033[0m\n" << std::endl;
-<<<<<<< HEAD
                 std::cout << "method : " << req.method << std::endl;
                 std::cout << "path : " << req.path << std::endl;
                 std::cout << "http_version : " << req.http_version << std::endl;
@@ -140,7 +139,6 @@ void Server::serve(const t_config & data) {
                 }
                 else
                     send(client_fd, "HTTP/1.1 404 Not Found\n\n", 23, 0);
-=======
                 std::cout << buffer << std::endl;
                 if (req.method == "GET" && req.path == "/")
                     send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
@@ -148,7 +146,6 @@ void Server::serve(const t_config & data) {
                     image_response(req, client_fd);
                 else if (req.method == "GET" && std::string(buffer).find("Sec-Fetch-Dest: document") != SIZE_T_MAX)
                     documents_respons(client_fd, req, data);
->>>>>>> c97de6a34bd6a5b0fc285550012fd9815694cd2c
                 close(client_fd);
                 fds[1].fd = -1;
             }
