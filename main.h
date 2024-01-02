@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.h                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/01 12:58:05 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/02 12:06:54 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,15 +33,17 @@ typedef struct t_requ {
     std::string path;
     std::string http_version;
     std::string host;
+    std::string connection;
     std::string user_agent;
     std::string accept;
-    std::string accept_language;
-    std::string accept_encoding;
-    std::string connection;
-    std::string cookie;
-    std::string content_type;
-    std::string content_length;
-    std::string body;
+    std::string Sec_GPC;
+    std::string Fetch_Site;
+    std::string Fetch_Mode;
+    std::string Fetch_Dest;
+    std::string Referer;
+    std::string Accept_Encoding;
+    std::string Accept_Language;
+    int size;
 } t_request;
 
 

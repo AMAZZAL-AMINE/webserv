@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/01 22:56:55 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/02 12:23:27 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,37 @@ void Server::serve(const t_config & data) {
             } else {
                 buffer[rs] = '\0';
                 t_request req = pars(buffer);
+                std::cout << "====================================================\n";
                 std::cout << "\033[1;32m----------- Request -------\033[0m\n" << std::endl;
+                std::cout << "method : " << req.method << std::endl;
+                std::cout << "path : " << req.path << std::endl;
+                std::cout << "http_version : " << req.http_version << std::endl;
+                std::cout << "host : " << req.host << std::endl;
+                std::cout << "connection : " << req.connection << std::endl;
+                std::cout << "user_agent : " << req.user_agent << std::endl;
+                std::cout << "accept : " << req.accept << std::endl;
+                std::cout << "Sec_GPC : " << req.Sec_GPC << std::endl;
+                std::cout << "====================================================\n";
+                // std::cout << "Fetch_Site : " << req.Fetch_Site << std::endl;
+                // std::cout << "Fetch_Mode : " << req.Fetch_Mode << std::endl;
+                // std::cout << "Fetch_Dest : " << req.Fetch_Dest << std::endl;
+                // std::cout << "Referer : " << req.Referer << std::endl;
+                // std::cout << "Accept_Encoding : " << req.Accept_Encoding << std::endl;
+                // std::cout << "Accept_Language : " << req.Accept_Language << std::endl;
+                if (req.method == "GET" && req.path == "/")
+                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                else if (req.method == "GET" && std::string(buffer).find("Sec-Fetch-Dest: image")) {
+                    const char* relativePath = req.path.c_str() + 1;
+                    char resolvedPath[PATH_MAX];
+                    std::string line, htmlData = "";
+                    realpath(relativePath, resolvedPath);
+                    std::ifstream file(resolvedPath, std::ios::binary);
+                    htmlData.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                    std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: image/ong\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+                    send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+                }
+                else
+                    send(client_fd, "HTTP/1.1 404 Not Found\n\n", 23, 0);
                 std::cout << buffer << std::endl;
                 if (req.method == "GET" && req.path == "/")
                     send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
