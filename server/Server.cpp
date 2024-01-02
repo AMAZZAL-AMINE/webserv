@@ -3,20 +3,29 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/01 13:06:34 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/02 12:23:27 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../main.h"
+#include <sstream> 
+std::string get_response_message(std::string fhtml) {
+    char resolvedPath[PATH_MAX];
+    realpath(fhtml.c_str(), resolvedPath);
+    std::fstream file(resolvedPath);
+    if (!file.is_open())
+        return "error";
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    file.close();
+    return buffer.str();
+}
 
 Server::Server() {
-    std::fstream file("gg.html");
-    std::string line, htmlData;
-    while (std::getline(file, line))
-        htmlData += line;
+    std::string htmlData = get_response_message("html_root/index.html");
     this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
 }
 
@@ -34,9 +43,43 @@ int setup_server(const t_config & data, sockaddr_in & address) {
     return server_fd;
 }
 
+void image_response(t_request & req, int client_fd) {
+    const char* relativePath = std::string(std::string("assets") + req.path).c_str();
+    char resolvedPath[PATH_MAX];
+    std::string line, htmlData = "";
+    realpath(relativePath, resolvedPath);
+    std::ifstream file(resolvedPath, std::ios::binary);
+    htmlData.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: image/ong\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+    file.close();
+    send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+}
+
+void response_errors(int client_fd, int code, const t_config & data) {
+    std::cout << "\033[1;31m----------- Error -------\033[0m\n" << std::endl;
+    std::string htmlData = "";
+    if (code == 404)
+        htmlData = get_response_message(data.error404);
+    else if (code == 500)
+        htmlData = get_response_message(data.error500);
+    std::cout << "HTML : " << data.error404 << std::endl;
+    std::string httpResq = "HTTP/1.1 404 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+    send(client_fd, httpResq.c_str(), httpResq.length(), 0);
+}
+
+void documents_respons(int client_fd, const t_request & req, const t_config & data) {
+    std::string htmlData = get_response_message(std::string("html_root") + req.path);
+    if (htmlData == "error")
+        response_errors(client_fd, 404, data);
+    else {
+        std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+        send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+    }
+}
+
 void Server::serve(const t_config & data) {
     int server_fd, client_fd;
-    char buffer[30000] = {0};
+    char buffer[3000] = {0};
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);
@@ -65,19 +108,46 @@ void Server::serve(const t_config & data) {
                 fds[1].fd = -1;
                 continue;
             } else {
-                buffer[rs] = '\0'; // Null-terminate the received data
-                // std::cout << buffer << std::endl;
+                buffer[rs] = '\0';
                 t_request req = pars(buffer);
+                std::cout << "====================================================\n";
                 std::cout << "\033[1;32m----------- Request -------\033[0m\n" << std::endl;
                 std::cout << "method : " << req.method << std::endl;
                 std::cout << "path : " << req.path << std::endl;
                 std::cout << "http_version : " << req.http_version << std::endl;
+                std::cout << "host : " << req.host << std::endl;
+                std::cout << "connection : " << req.connection << std::endl;
+                std::cout << "user_agent : " << req.user_agent << std::endl;
+                std::cout << "accept : " << req.accept << std::endl;
+                std::cout << "Sec_GPC : " << req.Sec_GPC << std::endl;
+                std::cout << "====================================================\n";
+                // std::cout << "Fetch_Site : " << req.Fetch_Site << std::endl;
+                // std::cout << "Fetch_Mode : " << req.Fetch_Mode << std::endl;
+                // std::cout << "Fetch_Dest : " << req.Fetch_Dest << std::endl;
+                // std::cout << "Referer : " << req.Referer << std::endl;
+                // std::cout << "Accept_Encoding : " << req.Accept_Encoding << std::endl;
+                // std::cout << "Accept_Language : " << req.Accept_Language << std::endl;
                 if (req.method == "GET" && req.path == "/")
                     send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-                else if (req.method == "GET" && req.path == "/favicon.ico")
-                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                else if (req.method == "GET" && std::string(buffer).find("Sec-Fetch-Dest: image")) {
+                    const char* relativePath = req.path.c_str() + 1;
+                    char resolvedPath[PATH_MAX];
+                    std::string line, htmlData = "";
+                    realpath(relativePath, resolvedPath);
+                    std::ifstream file(resolvedPath, std::ios::binary);
+                    htmlData.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                    std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: image/ong\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+                    send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+                }
                 else
                     send(client_fd, "HTTP/1.1 404 Not Found\n\n", 23, 0);
+                std::cout << buffer << std::endl;
+                if (req.method == "GET" && req.path == "/")
+                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                else if (req.method == "GET" && std::string(buffer).find("Sec-Fetch-Dest: image") != SIZE_T_MAX)
+                    image_response(req, client_fd);
+                else if (req.method == "GET" && std::string(buffer).find("Sec-Fetch-Dest: document") != SIZE_T_MAX)
+                    documents_respons(client_fd, req, data);
                 close(client_fd);
                 fds[1].fd = -1;
             }

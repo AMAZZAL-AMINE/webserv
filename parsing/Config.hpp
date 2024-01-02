@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/26 20:56:18 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/27 20:17:18 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/01 17:57:12 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@ typedef struct t_config {
   std::string server_name;
   std::string host_name;
   int         id;
+  std::string error404;
+  std::string error500;
 } t_config;
 
 class Config {
