@@ -6,7 +6,7 @@
 /*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/02 12:11:49 by rouali           ###   ########.fr       */
+/*   Updated: 2024/01/02 12:23:27 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,6 +110,7 @@ void Server::serve(const t_config & data) {
             } else {
                 buffer[rs] = '\0';
                 t_request req = pars(buffer);
+                std::cout << "====================================================\n";
                 std::cout << "\033[1;32m----------- Request -------\033[0m\n" << std::endl;
                 std::cout << "method : " << req.method << std::endl;
                 std::cout << "path : " << req.path << std::endl;
@@ -119,6 +120,7 @@ void Server::serve(const t_config & data) {
                 std::cout << "user_agent : " << req.user_agent << std::endl;
                 std::cout << "accept : " << req.accept << std::endl;
                 std::cout << "Sec_GPC : " << req.Sec_GPC << std::endl;
+                std::cout << "====================================================\n";
                 // std::cout << "Fetch_Site : " << req.Fetch_Site << std::endl;
                 // std::cout << "Fetch_Mode : " << req.Fetch_Mode << std::endl;
                 // std::cout << "Fetch_Dest : " << req.Fetch_Dest << std::endl;

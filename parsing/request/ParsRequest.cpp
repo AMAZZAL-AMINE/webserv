@@ -246,6 +246,7 @@ t_request pars(std::string gg)
   size += data.accept.size();
   data.Sec_GPC = get_(gg, size + 1);
 
+
   // size += data.Sec_GPC.size();
   // find "Sec-Fetch-Site: " and get the value after it until \n
   
