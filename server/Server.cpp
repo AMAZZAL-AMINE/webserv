@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/02 19:23:40 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/03 16:48:16 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,9 @@ void prinHttpRequest(HttpRequest & req) {
     std::cout << "HEADERS : " << std::endl;
     for (size_t i = 0; i < req.headers.size(); i++)
         std::cout << req.headers[i] << std::endl;
+    std::cout << "BODY : " << std::endl;
+    for (size_t i = 0; i < req.body.size(); i++)
+        std::cout << req.body[i] << std::endl;
 }
 
 void Server::serve(const t_config & data) {
@@ -105,9 +108,8 @@ void Server::serve(const t_config & data) {
     listen(server_fd, 3);
     for (;;) {
         int ret = poll(fds, 2, 1000);
-        if (ret == 0) {
+        if (ret == 0)
            response_errors(client_fd, 408, data);
-        }
         if (fds[0].revents & POLLIN) {
             fds[1].fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
             fds[1].events = POLLIN;
@@ -124,7 +126,7 @@ void Server::serve(const t_config & data) {
                 buffer[rs] = '\0';
                 HttpRequest __unused req = parseHttpRequest(buffer);
                 prinHttpRequest(req);
-                if (req.method != "GET" && req.method != "POST") {
+                if (req.is_valid == false) {
                     response_errors(client_fd, 400, data);
                     continue;
                 }
