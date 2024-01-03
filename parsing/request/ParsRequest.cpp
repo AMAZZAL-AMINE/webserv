@@ -12,35 +12,7 @@ bool is_request_valid(const std::string & request) {
   return true;
 }
 
-HttpRequest parseHttpRequest(const std::string & request) {
-  HttpRequest httpRequest;
-   httpRequest.is_valid = true;
-  if (is_request_valid(request) == false) {
-    httpRequest.is_valid = false;
-    httpRequest.ifnotvalid_code_status = 400;
-    return httpRequest;
-  }
-  std::istringstream stream(request);
-  stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
-  //check is chunked
-  if (httpRequest.method == "POST" && request.find("Transfer-Encoding: chunked") != SIZE_T_MAX)
-    httpRequest.is_chunked = true;
-  std::string content_length = request.substr(request.find("Content-Length:") + 16);
-  httpRequest.content_length = std::stoi(content_length);
-  std::string header;
-  int start = 0;
-  while (std::getline(stream, header)) {
-    if (header == "\r") {
-      if (start == 0)
-        continue;
-      else
-        break;
-    }
-    start++;
-    httpRequest.headers.push_back(header);
-  }
-
-  //todo : check if body is chunked
+void get_body(std::istringstream & stream, HttpRequest & httpRequest) {
   std::string body;
   if (httpRequest.is_chunked == true) {
     while (std::getline(stream, body)) {
@@ -57,5 +29,46 @@ HttpRequest parseHttpRequest(const std::string & request) {
     httpRequest.has_body = false;
   else
     httpRequest.has_body = true;
+}
+
+HttpRequest parseHttpRequest(const std::string & request) {
+  HttpRequest httpRequest;
+   httpRequest.is_valid = true;
+  if (is_request_valid(request) == false) {
+    httpRequest.is_valid = false;
+    httpRequest.ifnotvalid_code_status = 400;
+    return httpRequest;
+  }
+  std::istringstream stream(request);
+  stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
+    int start = 0;
+    std::string header;
+    while (std::getline(stream, header)) {
+      if (header == "\r") {
+        if (start == 0)
+          continue;
+        else
+          break;
+      }
+      start++;
+      httpRequest.headers.push_back(header);
+    }
+    if (request.find("Content-Length:") != SIZE_T_MAX)
+      httpRequest.content_length = _atoi_(request.substr(request.find("Content-Length:") + 16));
+    else
+      httpRequest.content_length = 0;
+  if (httpRequest.method == "POST") {
+    if (request.find("Transfer-Encoding: chunked") != SIZE_T_MAX)
+      httpRequest.is_chunked = true;
+    get_body(stream, httpRequest);
+    httpRequest.has_query = false;
+  }else {
+    if (httpRequest.path.find("?") != SIZE_T_MAX) {
+      std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+      httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+      httpRequest.has_query = true;
+      httpRequest.query = query;
+    }
+  }
   return httpRequest;
 }

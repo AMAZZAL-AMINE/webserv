@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/03 12:45:32 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/03 18:09:17 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <sstream>
+#include <sys/select.h>
 
 
 

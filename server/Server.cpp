@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/03 16:48:16 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/03 18:32:24 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,9 +86,13 @@ void prinHttpRequest(HttpRequest & req) {
     std::cout << "HEADERS : " << std::endl;
     for (size_t i = 0; i < req.headers.size(); i++)
         std::cout << req.headers[i] << std::endl;
-    std::cout << "BODY : " << std::endl;
-    for (size_t i = 0; i < req.body.size(); i++)
-        std::cout << req.body[i] << std::endl;
+    if (req.has_body == true) {   
+        std::cout << "BODY : " << std::endl;
+        for (size_t i = 0; i < req.body.size(); i++)
+            std::cout << req.body[i] << std::endl;
+    }else if (req.has_query == true) {
+        std::cout << "QUERY : " << req.query << std::endl;
+    }
 }
 
 void Server::serve(const t_config & data) {

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/03 16:58:52 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/03 18:26:50 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@ typedef struct HttpRequest {
     bool is_chunked;
     int content_length;
     int has_body;
+    int has_query;
+    std::string query;
     std::vector<std::string> headers;
     std::vector<std::string> body;
 } HttpRequest;
