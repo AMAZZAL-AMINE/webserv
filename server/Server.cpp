@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/03 18:32:24 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/04 18:07:39 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ Server::Server() {
     std::string htmlData = get_response_message("html_root/index.html");
     this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
 }
-int setup_server(const t_config & data, sockaddr_in & address) {
+int setup_server(const t_config & data,struct sockaddr_in & address) {
     int server_fd;
     int opt = 1;
 
@@ -43,10 +43,10 @@ int setup_server(const t_config & data, sockaddr_in & address) {
 }
 
 void image_response(HttpRequest & req, int client_fd) {
-    const char* relativePath = std::string(std::string("assets") + req.path).c_str();
+    std::string relativePath = "assets" + req.path;
     char resolvedPath[PATH_MAX];
-    std::string line, htmlData = "";
-    realpath(relativePath, resolvedPath);
+    std::string htmlData = "";
+    realpath(relativePath.c_str(), resolvedPath);
     std::ifstream file(resolvedPath, std::ios::binary);
     htmlData.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: image/png\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
@@ -95,59 +95,75 @@ void prinHttpRequest(HttpRequest & req) {
     }
 }
 
+bool is_request_img(HttpRequest & req) {
+    std::string imgType[] = {".png", ".jpg", ".jpeg", ".gif", ".ico"};
+    for (size_t i = 0; i < 5; i++) {
+        if (req.path.find(imgType[i]) != SIZE_T_MAX)
+            return true;
+    }
+    return false;
+}
+
 void Server::serve(const t_config & data) {
-    int server_fd, client_fd;
-    char buffer[3000] = {0};
+    int server_fd;
+    char buffer[BUFSIZ] = {0};
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);
-    struct pollfd fds[2];
-    fds[0].fd = server_fd;
-    fds[0].events = POLLIN;  // Monitor for incoming connection requests
-    fds[1].fd = -1;          // Initialize client socket to -1 (no client initially)
-    fds[1].events = POLLIN;
+    fd_set fds;
     std::cout << "server runing on "<< std::endl;
     std::cout << "      local : localhost:" << data.port << std::endl;
     std::cout << "      network : 10.11.3.5:" << data.port << std::endl;
     listen(server_fd, 3);
+    timeval timeout;
+        FD_ZERO(&fds);
+        FD_SET(server_fd, &fds);
+    timeout.tv_sec = 15;
+    timeout.tv_usec = 0;
     for (;;) {
-        int ret = poll(fds, 2, 1000);
+        int ret = select(server_fd + 1, &fds, NULL, NULL, &timeout);
+        int client_fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
         if (ret == 0)
            response_errors(client_fd, 408, data);
-        if (fds[0].revents & POLLIN) {
-            fds[1].fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
-            fds[1].events = POLLIN;
-        }
-        if (fds[1].revents & POLLIN) {
-            client_fd = fds[1].fd;
-            ssize_t rs = read(client_fd, buffer, sizeof(buffer) - 1);
-            if (rs <= 0) {
-                std::cout << "Client disconnected" << std::endl;
-                close(client_fd);
-                fds[1].fd = -1;
-                continue;
-            } else {
-                buffer[rs] = '\0';
-                HttpRequest __unused req = parseHttpRequest(buffer);
+        else if (ret == -1)
+            response_errors(client_fd, 500, data);
+        else {
+            int valread = read(client_fd, buffer, BUFSIZ);
+            if (valread == -1)
+                response_errors(client_fd, 500, data);
+            else {
+                HttpRequest req = parseHttpRequest(std::string(buffer));
                 prinHttpRequest(req);
-                if (req.is_valid == false) {
-                    response_errors(client_fd, 400, data);
-                    continue;
-                }
                 if (req.path == "/")
                     send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-                if (req.method == "GET" && req.path == "/")
-                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-                else if (req.method == "GET" && std::string(buffer).find("Sec-Fetch-Dest: image") != SIZE_T_MAX)
-                    image_response(req, client_fd);
-                else if (req.method == "GET" && std::string(buffer).find("Sec-Fetch-Dest: document") != SIZE_T_MAX)
-                    documents_respons(client_fd, req, data);
-                close(client_fd);
-                fds[1].fd = -1;
+                if (req.method == "GET") {
+                    if (is_request_img(req))
+                        image_response(req, client_fd);
+                    else
+                        documents_respons(client_fd, req, data);
+                }else
+                    response_errors(client_fd, 400, data);
+                clear_httprequest(req);
             }
+            close(client_fd);
         }
     }
     close(server_fd);
+}
+
+void clear_httprequest(HttpRequest & req) {
+    req.method = "";
+    req.path = "";
+    req.version = "";
+    req.is_valid = false;
+    req.ifnotvalid_code_status = false;
+    req.is_chunked = false;
+    req.content_length = 0;
+    req.has_body = false;
+    req.has_query = false;
+    req.query = "";
+    req.headers.clear();
+    req.body.clear();
 }
 
 

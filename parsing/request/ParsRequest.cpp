@@ -31,6 +31,7 @@ void get_body(std::istringstream & stream, HttpRequest & httpRequest) {
     httpRequest.has_body = true;
 }
 
+
 HttpRequest parseHttpRequest(const std::string & request) {
   HttpRequest httpRequest;
    httpRequest.is_valid = true;
@@ -62,13 +63,12 @@ HttpRequest parseHttpRequest(const std::string & request) {
       httpRequest.is_chunked = true;
     get_body(stream, httpRequest);
     httpRequest.has_query = false;
-  }else {
-    if (httpRequest.path.find("?") != SIZE_T_MAX) {
-      std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
-      httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
-      httpRequest.has_query = true;
-      httpRequest.query = query;
-    }
+  }
+  if (httpRequest.path.find("?") != SIZE_T_MAX) {
+    std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+    httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+    httpRequest.has_query = true;
+    httpRequest.query = query;
   }
   return httpRequest;
 }
