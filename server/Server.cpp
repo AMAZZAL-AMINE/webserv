@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/04 18:07:39 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/04 18:51:12 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,27 +116,32 @@ void Server::serve(const t_config & data) {
     std::cout << "      network : 10.11.3.5:" << data.port << std::endl;
     listen(server_fd, 3);
     timeval timeout;
-        FD_ZERO(&fds);
-        FD_SET(server_fd, &fds);
     timeout.tv_sec = 15;
     timeout.tv_usec = 0;
+    FD_ZERO(&fds);
+    FD_SET(server_fd, &fds);
     for (;;) {
         int ret = select(server_fd + 1, &fds, NULL, NULL, &timeout);
         int client_fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
         if (ret == 0)
            response_errors(client_fd, 408, data);
+        else if (ret < 0)
+            response_errors(client_fd, 500, data);
         else if (ret == -1)
             response_errors(client_fd, 500, data);
         else {
             int valread = read(client_fd, buffer, BUFSIZ);
-            if (valread == -1)
+            if (valread <= 0)
                 response_errors(client_fd, 500, data);
             else {
                 HttpRequest req = parseHttpRequest(std::string(buffer));
                 prinHttpRequest(req);
-                if (req.path == "/")
-                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-                if (req.method == "GET") {
+                if (req.path == "/") {
+                    ssize_t i = send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                    if (i == -1)
+                        response_errors(client_fd, 500, data);
+                }
+                else if (req.method == "GET") {
                     if (is_request_img(req))
                         image_response(req, client_fd);
                     else
