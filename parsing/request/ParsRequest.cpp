@@ -18,11 +18,11 @@ void get_body(std::istringstream & stream, HttpRequest & httpRequest) {
     while (std::getline(stream, body)) {
       if (body == "\r")
         break;
-      httpRequest.body.push_back(body);
+      httpRequest.body+= body;
     }
   }else {
     while (std::getline(stream, body)) {
-      httpRequest.body.push_back(body);
+      httpRequest.body += body;
     }
   }
   if (httpRequest.body.size() == 0)
@@ -34,7 +34,7 @@ void get_body(std::istringstream & stream, HttpRequest & httpRequest) {
 
 HttpRequest parseHttpRequest(const std::string & request) {
   HttpRequest httpRequest;
-   httpRequest.is_valid = true;
+  httpRequest.is_valid = true;
   if (is_request_valid(request) == false) {
     httpRequest.is_valid = false;
     httpRequest.ifnotvalid_code_status = 400;
@@ -58,7 +58,10 @@ HttpRequest parseHttpRequest(const std::string & request) {
       httpRequest.content_length = _atoi_(request.substr(request.find("Content-Length:") + 16));
     else
       httpRequest.content_length = 0;
+  httpRequest.is_ency_upl_file = false;
   if (httpRequest.method == "POST") {
+    if (request.find("multipart/form-data") != SIZE_T_MAX)
+      httpRequest.is_ency_upl_file = true;
     if (request.find("Transfer-Encoding: chunked") != SIZE_T_MAX)
       httpRequest.is_chunked = true;
     get_body(stream, httpRequest);

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/04 18:51:12 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/05 18:47:53 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,8 +88,7 @@ void prinHttpRequest(HttpRequest & req) {
         std::cout << req.headers[i] << std::endl;
     if (req.has_body == true) {   
         std::cout << "BODY : " << std::endl;
-        for (size_t i = 0; i < req.body.size(); i++)
-            std::cout << req.body[i] << std::endl;
+            std::cout << req.body << std::endl;
     }else if (req.has_query == true) {
         std::cout << "QUERY : " << req.query << std::endl;
     }
@@ -103,6 +102,7 @@ bool is_request_img(HttpRequest & req) {
     }
     return false;
 }
+
 
 void Server::serve(const t_config & data) {
     int server_fd;
@@ -130,13 +130,13 @@ void Server::serve(const t_config & data) {
         else if (ret == -1)
             response_errors(client_fd, 500, data);
         else {
-            int valread = read(client_fd, buffer, BUFSIZ);
+            ssize_t valread = recv(client_fd, buffer, sizeof(buffer), 0);
             if (valread <= 0)
                 response_errors(client_fd, 500, data);
             else {
                 HttpRequest req = parseHttpRequest(std::string(buffer));
                 prinHttpRequest(req);
-                if (req.path == "/") {
+                if (req.path == "/" ) {
                     ssize_t i = send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
                     if (i == -1)
                         response_errors(client_fd, 500, data);
@@ -154,6 +154,49 @@ void Server::serve(const t_config & data) {
         }
     }
     close(server_fd);
+}
+
+void saveFile(const char* content, const std::string& filename) {
+    std::ofstream ofs(filename.c_str(), std::ios::binary);
+    ofs.write(content, strlen(content));
+    std::cout << "File saved as " << filename << std::endl;
+    ofs.close();
+}
+
+std::vector<std::string> split(const std::string& str, const std::string& delim) {
+    std::vector<std::string> parts;
+    size_t start, end = 0;
+    while (end < str.length()) {
+        start = end;
+        while (start < str.length() && (delim.find(str[start]) != SIZE_T_MAX)) {
+            start++;
+        }
+        end = start;
+        while (end < str.length() && (delim.find(str[end]) == SIZE_T_MAX)) {
+            end++;
+        }
+        if (end - start != 0) {
+            parts.push_back(std::string(str, start, end - start));
+        }
+    }
+    return parts;
+}
+
+void Server::handle_files_upload(HttpRequest & req, std::string & requestBody) {
+    std::string boundary = req.headers[req.headers.size() - 1];
+    boundary = boundary.substr(boundary.find("=") + 1);
+    boundary = "--" + boundary;
+    std::vector<std::string> parts = split(requestBody, boundary);
+    for (size_t i = 0; i < parts.size(); i++) {
+        if (parts[i].find("Content-Type: multipart/form-data") != SIZE_T_MAX) {
+            std::cout << "Part " << i << ":" << std::endl;
+            std::vector<std::string> lines = split(parts[i], "\r\n");
+            std::string filename = lines[1].substr(lines[1].find("filename=") + 10);
+            filename = filename.substr(0, filename.length() - 1);
+            std::string content = lines[4].substr(0, lines[4].length() - 1);
+            saveFile(content.c_str(), filename);
+        }
+    }
 }
 
 void clear_httprequest(HttpRequest & req) {

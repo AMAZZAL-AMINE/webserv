@@ -5,7 +5,7 @@
   <!-- faveicon -->
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>lwibsayt</title>
+  <title>lwibsayt-upoad</title>
 </head>
 <style>
   * {
@@ -69,27 +69,7 @@
     border-radius: 10px;
     backdrop-filter: blur(10px);
     shape-rendering:  crispEdges;
-    box-shadow: 0 0 10px 0 rgb(161, 145, 145);
-  }
-  .aa {
-    text-decoration: none;
-    color: rgb(255, 255, 255);
-    padding: 10px;
-    margin: 10px;
-    width: 100%;
-    border-radius: 5px;
-    border: 1px solid #fff;
-    background-color: transparent;
-    color: #fff;
-    outline: none;
-    cursor: pointer;
-  }
-  .line {
-    width: 50px;
-    height: 1px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    background-color: rgba(255, 255, 255, 0.307);
+    box-shadow: 0 0 10px 0 rgba(56, 51, 51, 0.608);
   }
 </style>
 <body>
@@ -100,19 +80,15 @@
         src="/gggg.png" loading="lazy"
       />
 
-      <form class="form" action="/" method="post">
-        <p>Send data</p>
-        <input type="text" name="name" placeholder="name" />
-        <input type="text" name="email" placeholder="email" />
+      <form class="form" action="/"  method="post" enctype="multipart/form-data">
+        <input 
+          type="file" 
+          name="file"
+          multiple
+        />
         <button >
           submit
         </button>
-        <div class="line"></div>
-        <a
-          class="aa"
-          href="/upload.html" >
-          Or upload file
-        </a>
       </form>
     </div>
   </div>
