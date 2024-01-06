@@ -6,13 +6,15 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/05 18:47:53 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/06 22:49:35 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../main.h"
 #include <sstream> 
 std::string get_response_message(std::string fhtml) {
+    std::string root = ROOT;
+    fhtml = root + "/" + fhtml;
     char resolvedPath[PATH_MAX];
     realpath(fhtml.c_str(), resolvedPath);
     std::fstream file(resolvedPath);
@@ -25,7 +27,7 @@ std::string get_response_message(std::string fhtml) {
 }
 
 Server::Server() {
-    std::string htmlData = get_response_message("html_root/index.html");
+    std::string htmlData = get_response_message("index.html");
     this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
 }
 int setup_server(const t_config & data,struct sockaddr_in & address) {
@@ -69,7 +71,7 @@ void response_errors(int client_fd, int code, const t_config & data) {
 }
 
 void documents_respons(int client_fd, const HttpRequest & req, const t_config & data) {
-    std::string htmlData = get_response_message(std::string("html_root") + req.path);
+    std::string htmlData = get_response_message(req.path);
     if (htmlData == "error")
         response_errors(client_fd, 404, data);
     else {
@@ -106,7 +108,7 @@ bool is_request_img(HttpRequest & req) {
 
 void Server::serve(const t_config & data) {
     int server_fd;
-    char buffer[BUFSIZ] = {0};
+    
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);
@@ -130,13 +132,38 @@ void Server::serve(const t_config & data) {
         else if (ret == -1)
             response_errors(client_fd, 500, data);
         else {
+            char buffer[3000] = {0};
             ssize_t valread = recv(client_fd, buffer, sizeof(buffer), 0);
             if (valread <= 0)
                 response_errors(client_fd, 500, data);
             else {
-                HttpRequest req = parseHttpRequest(std::string(buffer));
-                prinHttpRequest(req);
-                if (req.path == "/" ) {
+                if (buffer[0] == '\0')
+                    continue;
+                HttpRequest req = parseHttpRequest(buffer);
+                std::string requestBody = buffer;
+                int reded_value = valread;
+                int content_length = req.content_length;
+                if (req.method == "POST") {
+                    while (1) {
+                        valread = recv(client_fd, buffer, sizeof(buffer), 0);
+                        reded_value += valread;
+                        if (valread <= 0)
+                            response_errors(client_fd, 500, data);
+                        else {                
+                            std::string newBuffer(buffer, valread);
+                            requestBody += newBuffer;
+                            std::string gg = buffer;
+                            if (reded_value >= content_length)
+                                break;
+                        }
+                    }
+                }
+                req = parseHttpRequest(requestBody);
+                if (req.method == "POST" && req.is_ency_upl_file) {
+                    // prinHttpRequest(req);
+                    handle_files_upload(req, requestBody);
+                }
+                else if (req.path == "/" ) {
                     ssize_t i = send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
                     if (i == -1)
                         response_errors(client_fd, 500, data);
@@ -148,7 +175,7 @@ void Server::serve(const t_config & data) {
                         documents_respons(client_fd, req, data);
                 }else
                     response_errors(client_fd, 400, data);
-                clear_httprequest(req);
+                // clear_httprequest(req);
             }
             close(client_fd);
         }
@@ -156,47 +183,17 @@ void Server::serve(const t_config & data) {
     close(server_fd);
 }
 
-void saveFile(const char* content, const std::string& filename) {
-    std::ofstream ofs(filename.c_str(), std::ios::binary);
-    ofs.write(content, strlen(content));
-    std::cout << "File saved as " << filename << std::endl;
+
+void Server::handle_files_upload(HttpRequest & __unused req, std::string & __unused requestBody) {
+    std::ofstream ofs;
+    std::string root = ROOT;
+    std::string path = root + "/uploads/" +  req.file_name;
+    ofs.open(path, std::fstream::app);
+    if (!ofs)
+        throw std::runtime_error("Could not open file for writing");
+    ofs << req.form_data;
+    std::cout << "file uploaded" << std::endl;
     ofs.close();
-}
-
-std::vector<std::string> split(const std::string& str, const std::string& delim) {
-    std::vector<std::string> parts;
-    size_t start, end = 0;
-    while (end < str.length()) {
-        start = end;
-        while (start < str.length() && (delim.find(str[start]) != SIZE_T_MAX)) {
-            start++;
-        }
-        end = start;
-        while (end < str.length() && (delim.find(str[end]) == SIZE_T_MAX)) {
-            end++;
-        }
-        if (end - start != 0) {
-            parts.push_back(std::string(str, start, end - start));
-        }
-    }
-    return parts;
-}
-
-void Server::handle_files_upload(HttpRequest & req, std::string & requestBody) {
-    std::string boundary = req.headers[req.headers.size() - 1];
-    boundary = boundary.substr(boundary.find("=") + 1);
-    boundary = "--" + boundary;
-    std::vector<std::string> parts = split(requestBody, boundary);
-    for (size_t i = 0; i < parts.size(); i++) {
-        if (parts[i].find("Content-Type: multipart/form-data") != SIZE_T_MAX) {
-            std::cout << "Part " << i << ":" << std::endl;
-            std::vector<std::string> lines = split(parts[i], "\r\n");
-            std::string filename = lines[1].substr(lines[1].find("filename=") + 10);
-            filename = filename.substr(0, filename.length() - 1);
-            std::string content = lines[4].substr(0, lines[4].length() - 1);
-            saveFile(content.c_str(), filename);
-        }
-    }
 }
 
 void clear_httprequest(HttpRequest & req) {
