@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/04 18:07:39 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/07 13:06:47 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,10 +133,12 @@ void Server::serve(const t_config & data) {
                 response_errors(client_fd, 500, data);
             else {
                 HttpRequest req = parseHttpRequest(std::string(buffer));
-                prinHttpRequest(req);
+                // prinHttpRequest(req);
+                if (req.path.find(".php") != SIZE_T_MAX)
+                    send(client_fd, run_cgi(req).c_str(), run_cgi(req).length(), 0);
                 if (req.path == "/")
                     send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-                if (req.method == "GET") {
+                else if (req.method == "GET") {
                     if (is_request_img(req))
                         image_response(req, client_fd);
                     else

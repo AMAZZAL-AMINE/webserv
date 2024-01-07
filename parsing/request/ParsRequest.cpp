@@ -35,6 +35,9 @@ void get_body(std::istringstream & stream, HttpRequest & httpRequest) {
 HttpRequest parseHttpRequest(const std::string & request) {
   HttpRequest httpRequest;
    httpRequest.is_valid = true;
+  // std::cout << request << std::endl;
+  // std::cout << "_____" << std::endl;
+  // exit(0);
   if (is_request_valid(request) == false) {
     httpRequest.is_valid = false;
     httpRequest.ifnotvalid_code_status = 400;

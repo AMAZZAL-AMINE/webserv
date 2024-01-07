@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.h                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/04 16:19:27 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/07 12:24:17 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,13 +30,16 @@
 #include <poll.h>
 #include <sstream>
 #include <sys/select.h>
-
+#include "./cgi/cgi.hpp"
 
 
 #define TIME_OUT 1000
+
+
 
 int _atoi_(std::string  str);
 void display_config(std::vector<std::vector<t_config> > http_config);
 HttpRequest parseHttpRequest(const std::string& request);
 void clear_httprequest(HttpRequest & req);
+std::string  run_cgi(HttpRequest & req);
 #endif
