@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/06 22:49:35 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/07 12:11:49 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,6 +123,7 @@ void Server::serve(const t_config & data) {
     FD_ZERO(&fds);
     FD_SET(server_fd, &fds);
     for (;;) {
+        signal(SIGPIPE, SIG_IGN);
         int ret = select(server_fd + 1, &fds, NULL, NULL, &timeout);
         int client_fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
         if (ret == 0)
