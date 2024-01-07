@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/07 16:00:56 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/07 17:40:10 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,7 +153,7 @@ void Server::serve(const t_config & data) {
                         else {                
                             std::string newBuffer(buffer, valread);
                             requestBody += newBuffer;
-                            std::string gg = buffer;
+                            std::string gg(buffer, valread);
                             if (reded_value >= content_length)
                                 break;
                         }
@@ -165,6 +165,7 @@ void Server::serve(const t_config & data) {
                 else if (req.method == "POST" && req.is_ency_upl_file) {
                     // prinHttpRequest(req);
                     handle_files_upload(req, requestBody);
+                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
                 }
                 else if (req.path == "/" ) {
                     ssize_t i = send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
@@ -191,7 +192,7 @@ void Server::handle_files_upload(HttpRequest & __unused req, std::string & __unu
     std::ofstream ofs;
     std::string root = ROOT;
     std::string path = root + "/uploads/" +  req.file_name;
-    ofs.open(path, std::fstream::app);
+    ofs.open(path, std::ofstream::out | std::ofstream::trunc);
     if (!ofs)
         throw std::runtime_error("Could not open file for writing");
     ofs << req.form_data;

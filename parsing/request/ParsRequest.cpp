@@ -44,7 +44,7 @@ std::string get_file_name(const std::string & requestBody) {
 void get_form_data(std::istringstream & stream, HttpRequest & httpRequest) {
   std::string form_data;
   while (std::getline(stream, form_data)) {
-    if (form_data == "\r")
+    if (form_data.find("------WebKitFormBoundary") != SIZE_T_MAX)
       break;
     httpRequest.form_data += form_data + "\n";
   }
