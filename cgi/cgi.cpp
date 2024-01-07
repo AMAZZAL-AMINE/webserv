@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/01/07 13:04:31 by rouali           ###   ########.fr       */
+/*   Updated: 2024/01/07 15:47:48 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,14 +142,9 @@ std::string  run_cgi(HttpRequest & __unused req)
                SERVER_SOFTWARE, SERVER_NAME, GATEWAY_INTERFACE, REDIRECT_STATUS);
 
     std::string script_excut = my_cgi.fill_env(SCRIPT_FILENAME);
-    // std::cout << "____start_____" << std::endl;
-    // std::cout << script_excut << std::endl;
-    // std::cout << "____end_____" << std::endl;
     size_t pos = script_excut.find("\r\n\r\n");
     std::string cgi_headers = script_excut.substr(0, pos);
     script_excut.erase(0, pos + 4);
-    // std::cout << cgi_headers << std::endl;
-    // exit(0);
     std::string html_res = "HTTP/1.1 200 OK\r\n"+cgi_headers +"\r\nContent-Length: " + std::to_string(script_excut.length()) +  "\r\n\r\n" + script_excut;
     return html_res;
 }

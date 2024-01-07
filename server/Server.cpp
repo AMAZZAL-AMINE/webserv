@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/07 13:24:43 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/07 16:00:56 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,9 +143,9 @@ void Server::serve(const t_config & data) {
                     continue;
                 std::string requestBody = buffer;
                 int reded_value = valread;
-                int content_length = req.content_length;
                 if (req.method == "POST") {
                     while (1) {
+                        int content_length = req.content_length;
                         valread = recv(client_fd, buffer, sizeof(buffer), 0);
                         reded_value += valread;
                         if (valread <= 0)
