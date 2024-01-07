@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/07 12:11:49 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/07 13:24:43 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,14 +139,8 @@ void Server::serve(const t_config & data) {
                 response_errors(client_fd, 500, data);
             else {
                 HttpRequest req = parseHttpRequest(std::string(buffer));
-                // prinHttpRequest(req);
-                if (req.path.find(".php") != SIZE_T_MAX)
-                    send(client_fd, run_cgi(req).c_str(), run_cgi(req).length(), 0);
-                if (req.path == "/")
-                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
                 if (buffer[0] == '\0')
                     continue;
-                HttpRequest req = parseHttpRequest(buffer);
                 std::string requestBody = buffer;
                 int reded_value = valread;
                 int content_length = req.content_length;
@@ -166,7 +160,9 @@ void Server::serve(const t_config & data) {
                     }
                 }
                 req = parseHttpRequest(requestBody);
-                if (req.method == "POST" && req.is_ency_upl_file) {
+                if (req.path.find(".php") != SIZE_T_MAX)
+                    send(client_fd, run_cgi(req).c_str(), run_cgi(req).length(), 0);
+                else if (req.method == "POST" && req.is_ency_upl_file) {
                     // prinHttpRequest(req);
                     handle_files_upload(req, requestBody);
                 }
