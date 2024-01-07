@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   atoi.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 19:12:33 by mamazzal          #+#    #+#             */
-/*   Updated: 2023/12/27 19:26:55 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/06 13:17:11 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "main.h"
 
-int _atoi_(std::string  str) {
+int _atoi_(std::string  str)
+{
   int ismis = 1;
   size_t count = 0;
   int result = 0;
