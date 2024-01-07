@@ -6,13 +6,15 @@
 /*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/07 13:06:47 by rouali           ###   ########.fr       */
+/*   Updated: 2024/01/07 12:11:49 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../main.h"
 #include <sstream> 
 std::string get_response_message(std::string fhtml) {
+    std::string root = ROOT;
+    fhtml = root + "/" + fhtml;
     char resolvedPath[PATH_MAX];
     realpath(fhtml.c_str(), resolvedPath);
     std::fstream file(resolvedPath);
@@ -25,7 +27,7 @@ std::string get_response_message(std::string fhtml) {
 }
 
 Server::Server() {
-    std::string htmlData = get_response_message("html_root/index.html");
+    std::string htmlData = get_response_message("index.html");
     this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
 }
 int setup_server(const t_config & data,struct sockaddr_in & address) {
@@ -69,7 +71,7 @@ void response_errors(int client_fd, int code, const t_config & data) {
 }
 
 void documents_respons(int client_fd, const HttpRequest & req, const t_config & data) {
-    std::string htmlData = get_response_message(std::string("html_root") + req.path);
+    std::string htmlData = get_response_message(req.path);
     if (htmlData == "error")
         response_errors(client_fd, 404, data);
     else {
@@ -88,8 +90,7 @@ void prinHttpRequest(HttpRequest & req) {
         std::cout << req.headers[i] << std::endl;
     if (req.has_body == true) {   
         std::cout << "BODY : " << std::endl;
-        for (size_t i = 0; i < req.body.size(); i++)
-            std::cout << req.body[i] << std::endl;
+            std::cout << req.body << std::endl;
     }else if (req.has_query == true) {
         std::cout << "QUERY : " << req.query << std::endl;
     }
@@ -104,9 +105,10 @@ bool is_request_img(HttpRequest & req) {
     return false;
 }
 
+
 void Server::serve(const t_config & data) {
     int server_fd;
-    char buffer[BUFSIZ] = {0};
+    
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);
@@ -116,20 +118,24 @@ void Server::serve(const t_config & data) {
     std::cout << "      network : 10.11.3.5:" << data.port << std::endl;
     listen(server_fd, 3);
     timeval timeout;
-        FD_ZERO(&fds);
-        FD_SET(server_fd, &fds);
     timeout.tv_sec = 15;
     timeout.tv_usec = 0;
+    FD_ZERO(&fds);
+    FD_SET(server_fd, &fds);
     for (;;) {
+        signal(SIGPIPE, SIG_IGN);
         int ret = select(server_fd + 1, &fds, NULL, NULL, &timeout);
         int client_fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
         if (ret == 0)
            response_errors(client_fd, 408, data);
+        else if (ret < 0)
+            response_errors(client_fd, 500, data);
         else if (ret == -1)
             response_errors(client_fd, 500, data);
         else {
-            int valread = read(client_fd, buffer, BUFSIZ);
-            if (valread == -1)
+            char buffer[3000] = {0};
+            ssize_t valread = recv(client_fd, buffer, sizeof(buffer), 0);
+            if (valread <= 0)
                 response_errors(client_fd, 500, data);
             else {
                 HttpRequest req = parseHttpRequest(std::string(buffer));
@@ -138,6 +144,37 @@ void Server::serve(const t_config & data) {
                     send(client_fd, run_cgi(req).c_str(), run_cgi(req).length(), 0);
                 if (req.path == "/")
                     send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                if (buffer[0] == '\0')
+                    continue;
+                HttpRequest req = parseHttpRequest(buffer);
+                std::string requestBody = buffer;
+                int reded_value = valread;
+                int content_length = req.content_length;
+                if (req.method == "POST") {
+                    while (1) {
+                        valread = recv(client_fd, buffer, sizeof(buffer), 0);
+                        reded_value += valread;
+                        if (valread <= 0)
+                            response_errors(client_fd, 500, data);
+                        else {                
+                            std::string newBuffer(buffer, valread);
+                            requestBody += newBuffer;
+                            std::string gg = buffer;
+                            if (reded_value >= content_length)
+                                break;
+                        }
+                    }
+                }
+                req = parseHttpRequest(requestBody);
+                if (req.method == "POST" && req.is_ency_upl_file) {
+                    // prinHttpRequest(req);
+                    handle_files_upload(req, requestBody);
+                }
+                else if (req.path == "/" ) {
+                    ssize_t i = send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+                    if (i == -1)
+                        response_errors(client_fd, 500, data);
+                }
                 else if (req.method == "GET") {
                     if (is_request_img(req))
                         image_response(req, client_fd);
@@ -145,12 +182,25 @@ void Server::serve(const t_config & data) {
                         documents_respons(client_fd, req, data);
                 }else
                     response_errors(client_fd, 400, data);
-                clear_httprequest(req);
+                // clear_httprequest(req);
             }
             close(client_fd);
         }
     }
     close(server_fd);
+}
+
+
+void Server::handle_files_upload(HttpRequest & __unused req, std::string & __unused requestBody) {
+    std::ofstream ofs;
+    std::string root = ROOT;
+    std::string path = root + "/uploads/" +  req.file_name;
+    ofs.open(path, std::fstream::app);
+    if (!ofs)
+        throw std::runtime_error("Could not open file for writing");
+    ofs << req.form_data;
+    std::cout << "file uploaded" << std::endl;
+    ofs.close();
 }
 
 void clear_httprequest(HttpRequest & req) {

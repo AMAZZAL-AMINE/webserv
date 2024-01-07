@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/04 18:11:17 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/06 17:47:05 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,12 @@ typedef struct HttpRequest {
     int content_length;
     int has_body;
     int has_query;
+    std::string form_data;
+    std::string file_name;
+    bool is_ency_upl_file;
     std::string query;
     std::vector<std::string> headers;
-    std::vector<std::string> body;
+    std::string body;
 } HttpRequest;
 
 class Server {
@@ -38,6 +41,7 @@ class Server {
   public : 
     Server();
     void serve(const t_config & data);
+    void handle_files_upload(HttpRequest &, std::string & dd);
     ~Server();
 };
 
