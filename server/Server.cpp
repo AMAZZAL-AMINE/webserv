@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/07 17:40:10 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/08 13:38:07 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,8 @@ int setup_server(const t_config & data,struct sockaddr_in & address) {
 }
 
 void image_response(HttpRequest & req, int client_fd) {
-    std::string relativePath = "assets" + req.path;
+    std::string root  = ROOT;
+    std::string relativePath = root + "/assets" + req.path;
     char resolvedPath[PATH_MAX];
     std::string htmlData = "";
     realpath(relativePath.c_str(), resolvedPath);
@@ -179,7 +180,7 @@ void Server::serve(const t_config & data) {
                         documents_respons(client_fd, req, data);
                 }else
                     response_errors(client_fd, 400, data);
-                // clear_httprequest(req);
+                clear_httprequest(req);
             }
             close(client_fd);
         }
@@ -191,7 +192,7 @@ void Server::serve(const t_config & data) {
 void Server::handle_files_upload(HttpRequest & __unused req, std::string & __unused requestBody) {
     std::ofstream ofs;
     std::string root = ROOT;
-    std::string path = root + "/uploads/" +  req.file_name;
+    std::string path = root + "/assets/" +  req.file_name;
     ofs.open(path, std::ofstream::out | std::ofstream::trunc);
     if (!ofs)
         throw std::runtime_error("Could not open file for writing");
