@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/08 13:38:07 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/08 22:55:25 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,11 +151,11 @@ void Server::serve(const t_config & data) {
                         reded_value += valread;
                         if (valread <= 0)
                             response_errors(client_fd, 500, data);
-                        else {                
+                        else {
                             std::string newBuffer(buffer, valread);
                             requestBody += newBuffer;
                             std::string gg(buffer, valread);
-                            if (reded_value >= content_length)
+                            if (reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
                                 break;
                         }
                     }
@@ -165,6 +165,7 @@ void Server::serve(const t_config & data) {
                     send(client_fd, run_cgi(req).c_str(), run_cgi(req).length(), 0);
                 else if (req.method == "POST" && req.is_ency_upl_file) {
                     // prinHttpRequest(req);
+                    std::cout << requestBody << std::endl;
                     handle_files_upload(req, requestBody);
                     send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
                 }

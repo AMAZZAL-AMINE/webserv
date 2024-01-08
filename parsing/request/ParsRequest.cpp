@@ -50,6 +50,17 @@ void get_form_data(std::istringstream & stream, HttpRequest & httpRequest) {
   }
 }
 
+std::string get_boundary_value(const std::string & request) {
+  std::string boundary = "";
+  int start = request.find("boundary=") + 9;
+  while (request[start] != '\r' && request[start] != '\n' && request[start] != '\0') {
+    boundary += request[start];
+    start++;
+  }
+  return boundary;
+}
+
+
 HttpRequest parseHttpRequest(const std::string & request) {
   HttpRequest httpRequest;
   httpRequest.is_valid = true;
@@ -84,6 +95,8 @@ HttpRequest parseHttpRequest(const std::string & request) {
       if (request.find("multipart/form-data") != SIZE_T_MAX) {
         httpRequest.is_ency_upl_file = true;
         httpRequest.file_name = get_file_name(request);
+        httpRequest.boundary_start = "--" + get_boundary_value(request);
+        httpRequest.boundary_end = httpRequest.boundary_start + "--";
         get_form_data(stream, httpRequest);
       }
       httpRequest.has_query = false;
