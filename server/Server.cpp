@@ -1,4 +1,4 @@
-/* ************************************************************************** */
+ /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
@@ -161,7 +161,10 @@ void Server::serve(const t_config & data) {
                 }
                 req = parseHttpRequest(requestBody);
                 if (req.path.find(".php") != SIZE_T_MAX)
-                    send(client_fd, run_cgi(req).c_str(), run_cgi(req).length(), 0);
+                {
+                    std::string test = run_cgi(req);
+                    send(client_fd, test.c_str(), test.length(), 0);
+                }
                 else if (req.method == "POST" && req.is_ency_upl_file) {
                     // prinHttpRequest(req);
                     handle_files_upload(req, requestBody);
@@ -213,6 +216,4 @@ void clear_httprequest(HttpRequest & req) {
     req.headers.clear();
     req.body.clear();
 }
-
-
 Server::~Server() {}
