@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/08 22:54:36 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/09 16:18:40 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,13 +26,14 @@ typedef struct HttpRequest {
     int content_length;
     int has_body;
     int has_query;
-    std::string form_data;
-    std::string file_name;
+    std::vector<std::string> form_data;
+    std::vector<std::string> file_name;
+    std::vector<std::string> content_type;
     std::string boundary_start;
     std::string boundary_end;
     bool is_ency_upl_file;
     std::string query;
-    std::vector<std::string> headers;
+    std::map<std::string, std::string> headers;
     std::string body;
 } HttpRequest;
 
