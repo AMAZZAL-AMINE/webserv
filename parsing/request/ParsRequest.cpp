@@ -121,9 +121,8 @@ void split_body(HttpRequest & httpRequest, std::istringstream & stream) {
   while (line.find(httpRequest.boundary_start) == SIZE_T_MAX)
     std::getline(stream, line);
   std::string form_data;
-  std::getline(stream, form_data);
   line = "";
-  while (true) {
+  while (std::getline(stream, form_data)) {
     if (form_data.find("filename=") != SIZE_T_MAX)
       httpRequest.file_name.push_back(get_file_name(form_data));
     else if (form_data.find("Content-Type:") != SIZE_T_MAX)
@@ -136,11 +135,12 @@ void split_body(HttpRequest & httpRequest, std::istringstream & stream) {
       httpRequest.form_data.push_back(line);
       line = "";
       form_data = "";
+    } 
+    else {
+      if (form_data != "\r")
+        line += form_data + "\n";
     }
-    line += form_data + "\n";
-    std::getline(stream, form_data);
   }
-
 }
 
 void handel_method_post(std::istringstream & stream, HttpRequest & httpRequest) {
