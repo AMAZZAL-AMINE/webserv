@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/07 16:00:56 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/12 19:37:19 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,8 @@ int setup_server(const t_config & data,struct sockaddr_in & address) {
 }
 
 void image_response(HttpRequest & req, int client_fd) {
-    std::string relativePath = "assets" + req.path;
+    std::string root  = ROOT;
+    std::string relativePath = root + "/assets" + req.path;
     char resolvedPath[PATH_MAX];
     std::string htmlData = "";
     realpath(relativePath.c_str(), resolvedPath);
@@ -86,8 +87,10 @@ void prinHttpRequest(HttpRequest & req) {
     std::cout << "Path : " << req.path << std::endl;
     std::cout << "Version : " << req.version << std::endl;
     std::cout << "HEADERS : " << std::endl;
-    for (size_t i = 0; i < req.headers.size(); i++)
-        std::cout << req.headers[i] << std::endl;
+    std::map<std::string, std::string>::iterator it = req.headers.begin();
+    for (; it != req.headers.end(); it++) {
+        std::cout << it->first << " : " << it->second << std::endl;
+    }
     if (req.has_body == true) {   
         std::cout << "BODY : " << std::endl;
             std::cout << req.body << std::endl;
@@ -125,6 +128,7 @@ void Server::serve(const t_config & data) {
     for (;;) {
         signal(SIGPIPE, SIG_IGN);
         int ret = select(server_fd + 1, &fds, NULL, NULL, &timeout);
+
         int client_fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
         if (ret == 0)
            response_errors(client_fd, 408, data);
@@ -142,25 +146,28 @@ void Server::serve(const t_config & data) {
                 if (buffer[0] == '\0')
                     continue;
                 std::string requestBody = buffer;
-                int reded_value = valread;
-                if (req.method == "POST") {
+                int reded_value = req.content_length;
+                if (req.method == "POST" && req.if_post_form_type == FORM_DATA) {
                     while (1) {
                         int content_length = req.content_length;
+                        if (reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
+                            break;
                         valread = recv(client_fd, buffer, sizeof(buffer), 0);
                         reded_value += valread;
                         if (valread <= 0)
                             response_errors(client_fd, 500, data);
-                        else {                
+                        else {
                             std::string newBuffer(buffer, valread);
                             requestBody += newBuffer;
-                            std::string gg = buffer;
-                            if (reded_value >= content_length)
+                            std::string gg(buffer, valread);
+                            if (reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
                                 break;
                         }
                     }
                 }
                 req = parseHttpRequest(requestBody);
                 if (req.path.find(".php") != SIZE_T_MAX)
+<<<<<<< HEAD
                 {
                     std::string test = run_cgi(req);
                     send(client_fd, test.c_str(), test.length(), 0);
@@ -168,6 +175,12 @@ void Server::serve(const t_config & data) {
                 else if (req.method == "POST" && req.is_ency_upl_file) {
                     // prinHttpRequest(req);
                     handle_files_upload(req, requestBody);
+=======
+                    send(client_fd, run_cgi(req).c_str(), run_cgi(req).length(), 0);
+                else if (req.method == "POST") {
+                    handle_post_requst(req);
+                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+>>>>>>> a2c407888426820b03fdeb2d3eccf823bb819b27
                 }
                 else if (req.path == "/" ) {
                     ssize_t i = send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
@@ -181,7 +194,7 @@ void Server::serve(const t_config & data) {
                         documents_respons(client_fd, req, data);
                 }else
                     response_errors(client_fd, 400, data);
-                // clear_httprequest(req);
+                clear_httprequest(req);
             }
             close(client_fd);
         }
@@ -190,16 +203,26 @@ void Server::serve(const t_config & data) {
 }
 
 
-void Server::handle_files_upload(HttpRequest & __unused req, std::string & __unused requestBody) {
-    std::ofstream ofs;
+void save_file(HttpRequest & req) {
     std::string root = ROOT;
-    std::string path = root + "/uploads/" +  req.file_name;
-    ofs.open(path, std::fstream::app);
+    std::string path = root + "/assets/" +  req.file_name[0];
+    std::ofstream ofs;
+    ofs.open(path, std::ofstream::out | std::ofstream::trunc);
     if (!ofs)
         throw std::runtime_error("Could not open file for writing");
-    ofs << req.form_data;
+    ofs << req.form_data[0];
     std::cout << "file uploaded" << std::endl;
     ofs.close();
+}
+
+void Server::handle_post_requst(HttpRequest & __unused req) {
+    for (size_t i = 0; i < req.form_data.size(); i++) {
+       if (req.content_type[i] == "file_upload")
+            save_file(req);
+        else {
+            std::cout << req.content_names[i] << " : " << req.form_data[i] << std::endl;
+        }
+    }
 }
 
 void clear_httprequest(HttpRequest & req) {
