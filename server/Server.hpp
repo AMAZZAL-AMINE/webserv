@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/09 16:18:40 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/12 19:19:04 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 #include "../main.h"
 
+#define DEFAULT_FORM 200
+#define FORM_DATA 201
 
 typedef struct HttpRequest {
     std::string method;
@@ -26,9 +28,11 @@ typedef struct HttpRequest {
     int content_length;
     int has_body;
     int has_query;
+    int if_post_form_type;
     std::vector<std::string> form_data;
     std::vector<std::string> file_name;
     std::vector<std::string> content_type;
+    std::vector<std::string> content_names;
     std::string boundary_start;
     std::string boundary_end;
     bool is_ency_upl_file;
@@ -45,7 +49,7 @@ class Server {
   public : 
     Server();
     void serve(const t_config & data);
-    void handle_files_upload(HttpRequest &, std::string & dd);
+    void handle_post_requst(HttpRequest &);
     ~Server();
 };
 
