@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/12 19:44:45 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/13 18:14:56 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,7 +191,6 @@ void Server::serve(const t_config & data) {
     }
     close(server_fd);
 }
-
 
 void save_file(HttpRequest & req) {
     std::string root = ROOT;

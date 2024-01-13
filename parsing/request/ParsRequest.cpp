@@ -182,7 +182,7 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
 }
 
 
-void split_body_default_urlencoded(HttpRequest & httpRequest, std::istringstream & stream) {
+void split_body(HttpRequest & httpRequest, std::istringstream & stream) {
   std::string line = "";
   std::string body = "";
   int count = 0;
@@ -206,9 +206,11 @@ void split_body_default_urlencoded(HttpRequest & httpRequest, std::istringstream
         value += body[start];
         start++;
       }
-      httpRequest.content_names.push_back(urlDecode(key));
+      key = httpRequest.if_post_form_type == TEXT_PLAIN ? key : urlDecode(key);
+      httpRequest.content_names.push_back(key);
       httpRequest.content_type.push_back(std::string("text"));
-      httpRequest.form_data.push_back(urlDecode(value));
+      value = httpRequest.if_post_form_type == TEXT_PLAIN ? value : urlDecode(value);
+      httpRequest.form_data.push_back(value);
       key = "";
       value = "";
     }
@@ -241,7 +243,10 @@ void handel_method_post(std::istringstream & stream, HttpRequest & httpRequest) 
     split_body_encrypted_multi_form_data(httpRequest, stream);
   }else if (content_type.find("application/x-www-form-urlencoded") != SIZE_T_MAX) {
     httpRequest.if_post_form_type = DEFAULT_FORM;
-    split_body_default_urlencoded(httpRequest, stream);
+    split_body(httpRequest, stream);
+  }else if (content_type.find("text/plain") != SIZE_T_MAX) {
+    httpRequest.if_post_form_type = TEXT_PLAIN;
+    split_body(httpRequest, stream);
   }
 }
 
@@ -256,11 +261,11 @@ HttpRequest parseHttpRequest(const std::string & request) {
   std::istringstream stream(request);
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
   httpRequest.headers = get_headers(stream);
-
   if (httpRequest.method == "POST") {
     handel_method_post(stream, httpRequest);
     httpRequest.has_body = true;
     httpRequest.is_ency_upl_file = true;
+    // std::cout << "body : " << httpRequest.body << std::endl;
   }
   else {
     httpRequest.has_body = false;

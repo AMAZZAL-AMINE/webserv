@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/12 19:43:36 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/13 18:01:48 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 
 #define DEFAULT_FORM 200
 #define FORM_DATA 201
+#define TEXT_PLAIN 202
 
 typedef struct HttpRequest {
   std::string method;
