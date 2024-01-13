@@ -167,20 +167,10 @@ void Server::serve(const t_config & data) {
                 }
                 req = parseHttpRequest(requestBody);
                 if (req.path.find(".php") != SIZE_T_MAX)
-<<<<<<< HEAD
-                {
-                    std::string test = run_cgi(req);
-                    send(client_fd, test.c_str(), test.length(), 0);
-                }
-                else if (req.method == "POST" && req.is_ency_upl_file) {
-                    // prinHttpRequest(req);
-                    handle_files_upload(req, requestBody);
-=======
                     send(client_fd, run_cgi(req).c_str(), run_cgi(req).length(), 0);
                 else if (req.method == "POST") {
                     handle_post_requst(req);
                     send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
->>>>>>> a2c407888426820b03fdeb2d3eccf823bb819b27
                 }
                 else if (req.path == "/" ) {
                     ssize_t i = send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);

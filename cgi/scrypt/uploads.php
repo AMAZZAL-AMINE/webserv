@@ -1,5 +1,5 @@
 <?php
-$folderPath = '../html_root/uploads';
+$folderPath = '../html_root/assets';
 
 $images = glob($folderPath . '/*.{jpg,jpeg,png,gif,svg}', GLOB_BRACE);
 
