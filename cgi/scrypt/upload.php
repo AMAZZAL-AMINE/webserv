@@ -1,84 +1,98 @@
 
 <title>Uploads</title>
 <style>
-    body
-    {
-        background-image: url('../../../up.png');
-        background-size: cover;
-        background-position: center;
-        font-family: 'Arial', sans-serif;
-        text-align: center;
-        margin: 0;
-        padding: 0;
-        color: #fff;
-    }
+        body {
+            position: relative;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            overflow: hidden;
+        }
 
-    h1 {
-        color: #333;
-    }
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom right, #744136, #8e44ad);
+            filter: blur(100px);
+        }
 
-    .image-link {
-        display: inline-block;
-        padding: 10px 20px;
-        margin: 10px;
-        text-decoration: none;
-        font-size: 16px;
-        color: #fff;
-        background-color: #3498db;
-        border: 1px solid #2980b9;
-        border-radius: 5px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease-in-out;
-        cursor: pointer;
-        overflow: hidden;
-        perspective: 1000px;
-    }
+        h1 {
+            margin: 100px;
+            color: #000;
+            font-family: 'Arial', sans-serif;
 
-    .image-link:hover {
-        transform: scale(1.1) rotateX(10deg);
-    }
+        }
 
-    .gallery {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
+        .image-link {
+            display: inline-block;
+            text-decoration: none;
+            transition: transform 0.3s ease-in-out;
+            cursor: pointer;
+            overflow: hidden;
+            perspective: 1000px;
+            margin: 10px;
+        }
 
-    .gallery img {
-        width: 150px;
-        height: 150px;
-        margin: 10px;
-        border-radius: 5px;
-        object-fit: cover;
-    }
-</style>
+        .image-link:hover {
+            transform: scale(1.1) rotateX(10deg);
+        }
+
+        .image-thumbnail {
+            width: 150px;
+            height: 150px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+
+        .image-info {
+            display: block;
+            color: #fff;
+        }
+    </style>
 
 <?php
-    $folderPath = '/Users/rouali/Desktop/Webserv/html_root/uploads';
+$folderPath = '../../html_root/assets';
+$images = glob($folderPath . '/*.*', GLOB_NOSORT);
 
-    $images = glob($folderPath . '/*.{jpg,jpeg,png,gif,svg}', GLOB_BRACE);
+// Set the number of images to display in each set
+$imagesPerSet = 4;
 
+if (count($images) > 0)
+{
+    echo "<h1>Uploaded Images</h1>";
     if (count($images) > 0)
     {
-        echo "<h1>Uploaded Images</h1>";
-        echo "<div class='gallery'>";
-        
-        foreach ($images as $image)
+        for ($i = 0; $i < count($images); $i += $imagesPerSet)
         {
-            $imageName = basename($image);
-            $imageUrl = "./$imageName";
-            echo "<a class='image-link' href='/$imageUrl'>$imageName</a>";
-            echo '<img style="object-fit: cover;" src="' . $imageUrl . '" alt="Image">';
+            echo "<div>";
+            for ($j = $i; $j < min($i + $imagesPerSet, count($images)); $j++)
+            {
+                $image = $images[$j];
+                $imageName = basename($image);
+                $imageUrl = "./$imageName";
+                
+                echo "<a class='image-link' href='/$imageUrl'>";
+                echo "<img class='image-thumbnail' src='/$imageUrl' alt='$imageName'>";
+                echo "<span class='image-info'>$imageName</span>";
+                echo "</a>";
+            }
+            echo "</div>";
         }
-        
-        echo "</div>";
     }
-    else
-    {
-        echo "<p>No images found in the specified folder.</p>";
-    }
-    ?>
+}
+else
+{
+    echo "<p>No images found in the specified folder.</p>";
+}
+?>
 
 
 
+<!-- echo '<img style="object-fit: cover;" src="' . $imageUrl . '" alt="Image">'; -->
 <!-- echo '<img src="' . $imageUrl . '" alt="Image">'; -->

@@ -6,7 +6,7 @@
 /*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/01/09 15:33:10 by rouali           ###   ########.fr       */
+/*   Updated: 2024/01/13 16:14:35 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,7 +143,6 @@ std::string  run_cgi(HttpRequest & __unused req)
     std::string REQUEST_METHOD = "GET";
     std::string CONTENT_LENGTH = "0";
     std::string QUERY_STRING = req.has_query ? req.query : "test=1";
-    std::cout << QUERY_STRING << std::endl;
     std::string SERVER_PROTOCOL = "HTTP/1.1";
     std::string SERVER_SOFTWARE = "localhost";
     std::string SERVER_NAME = "localhost";
