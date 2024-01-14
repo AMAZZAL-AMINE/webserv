@@ -181,7 +181,6 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
   }
 }
 
-
 void split_body(HttpRequest & httpRequest, std::istringstream & stream) {
   std::string line = "";
   std::string body = "";
@@ -198,7 +197,6 @@ void split_body(HttpRequest & httpRequest, std::istringstream & stream) {
   std::string key = "";
   std::string value = "";
   int start = 0;
-
   while (body[start] != '\0') {
     if (body[start] == '=') {
       start++;
@@ -228,6 +226,36 @@ void split_body(HttpRequest & httpRequest, std::istringstream & stream) {
   }
 }
 
+void split_body_text_plain(HttpRequest & httpRequest, std::istringstream & stream) {
+  std::string key = "";
+  std::string value = "";
+  std::string line = "";
+  int count = 0;
+  int index = 0;
+  if (!stream)
+    return;
+  while(std::getline(stream, line)) {
+    if (line == "\r" && count == 0)
+      continue;
+    while (size_t(index) < line.length() && line[index] != '=') {
+        key += line[index];
+        index++;
+    }
+    index++;
+    while (size_t(index) < line.length() && line[index] != '\0' && line[index] != '\r') {
+        value.append(1, line[index]);
+        index++;
+    }
+    httpRequest.content_names.push_back(key);
+    httpRequest.content_type.push_back(std::string("text"));
+    httpRequest.form_data.push_back(value);
+    key = "";
+    value = "";
+    index = 0;
+    count++;
+  }
+}
+
 void handel_method_post(std::istringstream & stream, HttpRequest & httpRequest) {
   if (!stream)
     return;
@@ -246,7 +274,7 @@ void handel_method_post(std::istringstream & stream, HttpRequest & httpRequest) 
     split_body(httpRequest, stream);
   }else if (content_type.find("text/plain") != SIZE_T_MAX) {
     httpRequest.if_post_form_type = TEXT_PLAIN;
-    split_body(httpRequest, stream);
+    split_body_text_plain(httpRequest, stream);
   }
 }
 
@@ -265,7 +293,6 @@ HttpRequest parseHttpRequest(const std::string & request) {
     handel_method_post(stream, httpRequest);
     httpRequest.has_body = true;
     httpRequest.is_ency_upl_file = true;
-    // std::cout << "body : " << httpRequest.body << std::endl;
   }
   else {
     httpRequest.has_body = false;

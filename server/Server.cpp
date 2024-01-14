@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/13 18:14:56 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/14 14:12:52 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,7 @@ void Server::serve(const t_config & data) {
     for (;;) {
         signal(SIGPIPE, SIG_IGN);
         int ret = select(server_fd + 1, &fds, NULL, NULL, &timeout);
-
+        
         int client_fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
         if (ret == 0)
            response_errors(client_fd, 408, data);
@@ -142,15 +142,17 @@ void Server::serve(const t_config & data) {
             if (valread <= 0)
                 response_errors(client_fd, 500, data);
             else {
-                HttpRequest req = parseHttpRequest(std::string(buffer));
+                std::string requestBody(buffer, valread);
+                HttpRequest req = parseHttpRequest(requestBody);
                 if (buffer[0] == '\0')
                     continue;
-                std::string requestBody = buffer;
                 int reded_value = req.content_length;
-                if (req.method == "POST" && req.if_post_form_type == FORM_DATA) {
+                if (req.method == "POST") {
                     while (1) {
                         int content_length = req.content_length;
-                        if (reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
+                        if (req.if_post_form_type == FORM_DATA && reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
+                                break;
+                        else if (reded_value >= content_length)
                             break;
                         valread = recv(client_fd, buffer, sizeof(buffer), 0);
                         reded_value += valread;
