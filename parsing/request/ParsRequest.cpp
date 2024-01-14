@@ -290,6 +290,7 @@ HttpRequest parseHttpRequest(const std::string & request) {
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
   httpRequest.headers = get_headers(stream);
   if (httpRequest.method == "POST") {
+    //check if hte post data send by query string or by body, if true get the data from query and append it to the body
     handel_method_post(stream, httpRequest);
     httpRequest.has_body = true;
     httpRequest.is_ency_upl_file = true;
