@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/14 14:12:52 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/15 13:16:43 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,9 +150,7 @@ void Server::serve(const t_config & data) {
                 if (req.method == "POST") {
                     while (1) {
                         int content_length = req.content_length;
-                        if (req.if_post_form_type == FORM_DATA && reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
-                                break;
-                        else if (reded_value >= content_length)
+                        if (reded_value >= content_length && req.if_post_form_type != FORM_DATA)
                             break;
                         valread = recv(client_fd, buffer, sizeof(buffer), 0);
                         reded_value += valread;

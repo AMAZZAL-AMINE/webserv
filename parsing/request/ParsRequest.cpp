@@ -278,6 +278,29 @@ void handel_method_post(std::istringstream & stream, HttpRequest & httpRequest) 
   }
 }
 
+void pars_post_query(std::string query, HttpRequest & httpRequest) {
+  std::string key = "";
+  std::string value = "";
+  for (size_t i = 0; i < query.length(); i++) {
+    while (i < query .length() && query[i] != '=') {
+      key += query[i];
+      i++;
+    }
+    i++;
+    if (i >= query.length())
+      break;
+    while (i < query.length() && query[i] != '&')  {
+      value += query[i];
+      i++;
+    }
+    httpRequest.content_names.push_back(urlDecode(key));
+    httpRequest.content_type.push_back(std::string("text"));
+    httpRequest.form_data.push_back(urlDecode(value));
+    key = "";
+    value = "";
+  }
+}
+
 HttpRequest parseHttpRequest(const std::string & request) {
   HttpRequest httpRequest;
   httpRequest.is_valid = true;
@@ -290,7 +313,11 @@ HttpRequest parseHttpRequest(const std::string & request) {
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
   httpRequest.headers = get_headers(stream);
   if (httpRequest.method == "POST") {
-    //check if hte post data send by query string or by body, if true get the data from query and append it to the body
+    if (httpRequest.path.find("?") != SIZE_T_MAX) {
+      std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+      pars_post_query(query, httpRequest);
+      httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+    }
     handel_method_post(stream, httpRequest);
     httpRequest.has_body = true;
     httpRequest.is_ency_upl_file = true;
