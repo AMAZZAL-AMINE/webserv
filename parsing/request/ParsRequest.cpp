@@ -349,6 +349,28 @@ void split_chunked_body(std::istringstream & stream, HttpRequest & __unused http
   }
 }
 
+
+void parst_get_query(std::string query, HttpRequest & httpRequest) {
+  std::string key = "";
+  std::string value = "";
+  for (size_t i = 0; i < query.length(); i++) {
+    while (i < query.length() && query[i] != '=') {
+      key += query[i];
+      i++;
+    }
+    i++;
+    if (i >= query.length())
+      break;
+    while (i < query.length() && query[i] != '&')  {
+      value += query[i];
+      i++;
+    }
+    httpRequest.query_params[urlDecode(key)] = urlDecode(value);
+    key = "";
+    value = "";
+  }
+}
+
 HttpRequest parseHttpRequest(const std::string & request) {
   HttpRequest httpRequest;
   httpRequest.is_valid = true;
@@ -373,12 +395,19 @@ HttpRequest parseHttpRequest(const std::string & request) {
       }
       handel_method_post(stream, httpRequest);
     }
+    httpRequest.has_query = false;
     httpRequest.has_body = true;
     httpRequest.is_ency_upl_file = true;
   }
   else {
     httpRequest.has_body = false;
     httpRequest.is_chunked = false;
+    if (httpRequest.path.find("?") != SIZE_T_MAX) {
+      std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+      parst_get_query(query, httpRequest);
+      httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+      httpRequest.has_query = true;
+    }
   }
   return httpRequest;
 }
