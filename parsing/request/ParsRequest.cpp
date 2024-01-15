@@ -301,6 +301,54 @@ void pars_post_query(std::string query, HttpRequest & httpRequest) {
   }
 }
 
+
+void split_chunked_body(std::istringstream & stream, HttpRequest & __unused httpRequest) {
+  int  __unused count = 0;
+  std::string __unused body = "";
+  std::string line = "";
+  if (!stream)
+    return;
+  while (std::getline(stream, line)) {
+    if (count == 0 && line == "\r") {
+      count = 0;
+      continue;
+    }
+    else if (count % 2 != 0) {
+      //erase /r/n
+      if (line !=  "\r" && line != "\n" && line != "") {
+        line.erase(line.length() - 1, 1);
+        body += line + "&";
+      }
+    }
+    else if (count % 2 == 0 && line == "\r")
+      break;
+    count++;
+  }
+
+  std::string key = "";
+  std::string value = "";
+  size_t start = 0;
+  while (start < body.length()) {
+    while (start < body.length() && body[start] != '=') {
+      key += body[start];
+      start++;
+    }
+    start++;
+    if (start >= body.length())
+      break;
+    while (start < body.length() && body[start] != '\0' && body[start] != '&') {
+      value += body[start];
+      start++;
+    }
+    httpRequest.content_names.push_back(key);
+    httpRequest.content_type.push_back(std::string("text"));
+    httpRequest.form_data.push_back(value);
+    key = "";
+    value = "";
+    start++;
+  }
+}
+
 HttpRequest parseHttpRequest(const std::string & request) {
   HttpRequest httpRequest;
   httpRequest.is_valid = true;
@@ -313,12 +361,18 @@ HttpRequest parseHttpRequest(const std::string & request) {
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
   httpRequest.headers = get_headers(stream);
   if (httpRequest.method == "POST") {
-    if (httpRequest.path.find("?") != SIZE_T_MAX) {
-      std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
-      pars_post_query(query, httpRequest);
-      httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+    // std::cout << "REQUEST : \n" << request << std::endl;
+    if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
+      httpRequest.is_chunked = true;
+      split_chunked_body(stream, httpRequest);
+    }else {
+      if (httpRequest.path.find("?") != SIZE_T_MAX) {
+        std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+        pars_post_query(query, httpRequest);
+        httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+      }
+      handel_method_post(stream, httpRequest);
     }
-    handel_method_post(stream, httpRequest);
     httpRequest.has_body = true;
     httpRequest.is_ency_upl_file = true;
   }
