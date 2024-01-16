@@ -6,12 +6,12 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/16 14:57:16 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/16 16:13:44 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../main.h"
-#include <sstream> 
+
 std::string get_response_message(std::string fhtml) {
     std::string root = ROOT;
     fhtml = root + "/" + fhtml;
@@ -44,7 +44,6 @@ int setup_server(const t_config & data,struct sockaddr_in & address) {
     return server_fd;
 }
 
-
 void response_errors(int client_fd, int code, const t_config & data) {
     std::string htmlData = "";
     std::string res_status = "";
@@ -66,6 +65,9 @@ void response_errors(int client_fd, int code, const t_config & data) {
     }else if (code == 403) {
         htmlData = get_response_message(data.error403);
         res_status = "403 Forbidden";
+    }else if (code ==  405) {
+        htmlData = get_response_message(data.error405);
+        res_status = "405 Method Not Allowed";
     }
     std::string httpResq = "HTTP/1.1 " + res_status + "\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
     send(client_fd, httpResq.c_str(), httpResq.length(), 0);
@@ -158,11 +160,14 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
     if (req.method == "POST") {   
         handle_post_requst(req);
         send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-    }
-    if (req.method == "GET")
+    } else if (req.method == "GET")
         handle_get_requst(req, client_fd, data);
     else if (req.method == "DELETE")
         response_errors(client_fd, 400, data);
+    else  {
+        std::cout << "METHOD : " << req.method << std::endl;
+        response_errors(client_fd, 405, data);
+    }
     clear_httprequest(req);
 }
 
@@ -227,7 +232,7 @@ void file_response(HttpRequest & __unused req, int & client_fd, const t_config &
         return;
     }
 
-    // Determine file size
+    //file size
     file.seekg(0, std::ios::end);
     //check if file size is bigger than 10MB
     if (file.tellg() > 10000000) {
@@ -237,32 +242,27 @@ void file_response(HttpRequest & __unused req, int & client_fd, const t_config &
     std::streamsize fileSize = file.tellg();
     file.seekg(0, std::ios::beg);
 
-    // Read the entire file into a buffer
     std::vector<char> buffer(fileSize);
     file.read(buffer.data(), fileSize);
 
-    // Determine the file extension to set the appropriate Content-Type
     std::string extension = resolvedPath;
     size_t dotPos = extension.find_last_of('.');
-    if (dotPos != std::string::npos) {
+    if (dotPos != std::string::npos)
         extension = extension.substr(dotPos + 1);
-    }
 
     std::string contentType;
-    if (extension == "html") {
+    if (extension == "html")
         contentType = "text/html";
-    } else if (extension == "jpg" || extension == "jpeg") {
+    else if (extension == "jpg" || extension == "jpeg")
         contentType = "image/jpeg";
-    } else if (extension == "png") {
+    else if (extension == "png")
         contentType = "image/png";
-    } else
+    else
         contentType = "application/octet-stream";
-
-    // Construct the HTTP response
     std::ostringstream httpRes;
-    httpRes << "HTTP/1.1 200 OK\n"
-            << "Content-Type: " << contentType << "\n"
-            << "Content-Length: " << fileSize << "\n\n";
+        httpRes << "HTTP/1.1 200 OK\n"
+        << "Content-Type: " << contentType << "\n"
+        << "Content-Length: " << fileSize << "\n\n";
 
     send(client_fd, httpRes.str().c_str(), httpRes.str().length(), 0);
     send(client_fd, buffer.data(), fileSize, 0);
