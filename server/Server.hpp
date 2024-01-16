@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/12 19:19:04 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/12 19:43:36 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,26 +19,26 @@
 #define FORM_DATA 201
 
 typedef struct HttpRequest {
-    std::string method;
-    std::string path;
-    std::string version;
-    bool is_valid;
-    bool ifnotvalid_code_status;
-    bool is_chunked;
-    int content_length;
-    int has_body;
-    int has_query;
-    int if_post_form_type;
-    std::vector<std::string> form_data;
-    std::vector<std::string> file_name;
-    std::vector<std::string> content_type;
-    std::vector<std::string> content_names;
-    std::string boundary_start;
-    std::string boundary_end;
-    bool is_ency_upl_file;
-    std::string query;
-    std::map<std::string, std::string> headers;
-    std::string body;
+  std::string method;
+  std::string path;
+  std::string version;
+  bool is_valid;
+  bool ifnotvalid_code_status;
+  bool is_chunked;
+  int content_length;
+  int has_body;
+  int has_query;
+  int if_post_form_type;
+  std::vector<std::string> form_data;
+  std::vector<std::string> file_name;
+  std::vector<std::string> content_type;
+  std::vector<std::string> content_names;
+  std::string boundary_start;
+  std::string boundary_end;
+  bool is_ency_upl_file;
+  std::string query;
+  std::map<std::string, std::string> headers;
+  std::string body;
 } HttpRequest;
 
 class Server {

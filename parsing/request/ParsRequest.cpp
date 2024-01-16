@@ -1,5 +1,31 @@
 #include "../../main.h"
 
+char hexToChar(const std::string & hex) {
+    std::istringstream iss(hex);
+    int value;
+    iss >> std::hex >> value;
+    return static_cast<char>(value);
+}
+
+std::string urlDecode(const std::string& input) {
+    std::string result;
+    result.reserve(input.length());
+
+    for (std::size_t i = 0; i < input.length(); ++i) {
+        if (input[i] == '%' && i + 2 < input.length()) {
+            std::string hex = input.substr(i + 1, 2);
+            result += hexToChar(hex);
+            i += 2;
+        }else if (input[i] == '+')
+            result += ' ';
+        else
+          result += input[i];
+    }
+
+    return result;
+}
+
+
 bool is_request_valid(const std::string & request) {
   if (request.find("GET") == SIZE_T_MAX && request.find("POST") == SIZE_T_MAX)
     return false;
@@ -180,9 +206,9 @@ void split_body_default_urlencoded(HttpRequest & httpRequest, std::istringstream
         value += body[start];
         start++;
       }
-      httpRequest.content_names.push_back(key);
+      httpRequest.content_names.push_back(urlDecode(key));
       httpRequest.content_type.push_back(std::string("text"));
-      httpRequest.form_data.push_back(value);
+      httpRequest.form_data.push_back(urlDecode(value));
       key = "";
       value = "";
     }
