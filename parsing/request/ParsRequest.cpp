@@ -181,8 +181,7 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
   }
 }
 
-
-void split_body_default_urlencoded(HttpRequest & httpRequest, std::istringstream & stream) {
+void split_body(HttpRequest & httpRequest, std::istringstream & stream) {
   std::string line = "";
   std::string body = "";
   int count = 0;
@@ -198,7 +197,6 @@ void split_body_default_urlencoded(HttpRequest & httpRequest, std::istringstream
   std::string key = "";
   std::string value = "";
   int start = 0;
-
   while (body[start] != '\0') {
     if (body[start] == '=') {
       start++;
@@ -206,9 +204,11 @@ void split_body_default_urlencoded(HttpRequest & httpRequest, std::istringstream
         value += body[start];
         start++;
       }
-      httpRequest.content_names.push_back(urlDecode(key));
+      key = httpRequest.if_post_form_type == TEXT_PLAIN ? key : urlDecode(key);
+      httpRequest.content_names.push_back(key);
       httpRequest.content_type.push_back(std::string("text"));
-      httpRequest.form_data.push_back(urlDecode(value));
+      value = httpRequest.if_post_form_type == TEXT_PLAIN ? value : urlDecode(value);
+      httpRequest.form_data.push_back(value);
       key = "";
       value = "";
     }
@@ -223,6 +223,36 @@ void split_body_default_urlencoded(HttpRequest & httpRequest, std::istringstream
       key += body[start];
       start++;
     }
+  }
+}
+
+void split_body_text_plain(HttpRequest & httpRequest, std::istringstream & stream) {
+  std::string key = "";
+  std::string value = "";
+  std::string line = "";
+  int count = 0;
+  int index = 0;
+  if (!stream)
+    return;
+  while(std::getline(stream, line)) {
+    if (line == "\r" && count == 0)
+      continue;
+    while (size_t(index) < line.length() && line[index] != '=') {
+        key += line[index];
+        index++;
+    }
+    index++;
+    while (size_t(index) < line.length() && line[index] != '\0' && line[index] != '\r') {
+        value.append(1, line[index]);
+        index++;
+    }
+    httpRequest.content_names.push_back(key);
+    httpRequest.content_type.push_back(std::string("text"));
+    httpRequest.form_data.push_back(value);
+    key = "";
+    value = "";
+    index = 0;
+    count++;
   }
 }
 
@@ -241,7 +271,103 @@ void handel_method_post(std::istringstream & stream, HttpRequest & httpRequest) 
     split_body_encrypted_multi_form_data(httpRequest, stream);
   }else if (content_type.find("application/x-www-form-urlencoded") != SIZE_T_MAX) {
     httpRequest.if_post_form_type = DEFAULT_FORM;
-    split_body_default_urlencoded(httpRequest, stream);
+    split_body(httpRequest, stream);
+  }else if (content_type.find("text/plain") != SIZE_T_MAX) {
+    httpRequest.if_post_form_type = TEXT_PLAIN;
+    split_body_text_plain(httpRequest, stream);
+  }
+}
+
+void pars_post_query(std::string query, HttpRequest & httpRequest) {
+  std::string key = "";
+  std::string value = "";
+  for (size_t i = 0; i < query.length(); i++) {
+    while (i < query .length() && query[i] != '=') {
+      key += query[i];
+      i++;
+    }
+    i++;
+    if (i >= query.length())
+      break;
+    while (i < query.length() && query[i] != '&')  {
+      value += query[i];
+      i++;
+    }
+    httpRequest.content_names.push_back(urlDecode(key));
+    httpRequest.content_type.push_back(std::string("text"));
+    httpRequest.form_data.push_back(urlDecode(value));
+    key = "";
+    value = "";
+  }
+}
+
+
+void split_chunked_body(std::istringstream & stream, HttpRequest & __unused httpRequest) {
+  int  __unused count = 0;
+  std::string __unused body = "";
+  std::string line = "";
+  if (!stream)
+    return;
+  while (std::getline(stream, line)) {
+    if (count == 0 && line == "\r") {
+      count = 0;
+      continue;
+    }
+    else if (count % 2 != 0) {
+      //erase /r/n
+      if (line !=  "\r" && line != "\n" && line != "") {
+        line.erase(line.length() - 1, 1);
+        body += line + "&";
+      }
+    }
+    else if (count % 2 == 0 && line == "\r")
+      break;
+    count++;
+  }
+
+  std::string key = "";
+  std::string value = "";
+  size_t start = 0;
+  while (start < body.length()) {
+    while (start < body.length() && body[start] != '=') {
+      key += body[start];
+      start++;
+    }
+    start++;
+    if (start >= body.length())
+      break;
+    while (start < body.length() && body[start] != '\0' && body[start] != '&') {
+      value += body[start];
+      start++;
+    }
+    httpRequest.content_names.push_back(key);
+    httpRequest.content_type.push_back(std::string("text"));
+    httpRequest.form_data.push_back(value);
+    key = "";
+    value = "";
+    start++;
+  }
+}
+
+
+void parst_get_query(std::string query, HttpRequest & httpRequest) {
+  std::string key = "";
+  std::string value = "";
+  for (size_t i = 0; i < query.length(); i++) {
+    while (i < query.length() && query[i] != '=') {
+      key += query[i];
+      i++;
+    }
+    i++;
+    if (i >= query.length())
+      break;
+    while (i < query.length() && query[i] != '&')  {
+      value += query[i];
+      i++;
+    }
+    httpRequest.query_params[urlDecode(key)] = urlDecode(value);
+    key = "";
+    value = "";
   }
 }
 
@@ -256,15 +382,32 @@ HttpRequest parseHttpRequest(const std::string & request) {
   std::istringstream stream(request);
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
   httpRequest.headers = get_headers(stream);
-
   if (httpRequest.method == "POST") {
-    handel_method_post(stream, httpRequest);
+    // std::cout << "REQUEST : \n" << request << std::endl;
+    if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
+      httpRequest.is_chunked = true;
+      split_chunked_body(stream, httpRequest);
+    }else {
+      if (httpRequest.path.find("?") != SIZE_T_MAX) {
+        std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+        pars_post_query(query, httpRequest);
+        httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+      }
+      handel_method_post(stream, httpRequest);
+    }
+    httpRequest.has_query = false;
     httpRequest.has_body = true;
     httpRequest.is_ency_upl_file = true;
   }
   else {
     httpRequest.has_body = false;
     httpRequest.is_chunked = false;
+    if (httpRequest.path.find("?") != SIZE_T_MAX) {
+      std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+      parst_get_query(query, httpRequest);
+      httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+      httpRequest.has_query = true;
+    }
   }
   return httpRequest;
 }
