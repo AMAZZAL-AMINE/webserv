@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/09 14:22:05 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/16 13:29:54 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@
 #include <sstream>
 #include <sys/select.h>
 #include "./cgi/cgi.hpp"
+#include <sys/stat.h>
+#include <dirent.h>
 
 
 #define TIME_OUT 1000

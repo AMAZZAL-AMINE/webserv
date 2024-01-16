@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/15 13:16:43 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/16 14:57:16 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,41 +44,31 @@ int setup_server(const t_config & data,struct sockaddr_in & address) {
     return server_fd;
 }
 
-void image_response(HttpRequest & req, int client_fd) {
-    std::string root  = ROOT;
-    std::string relativePath = root + "/assets" + req.path;
-    char resolvedPath[PATH_MAX];
-    std::string htmlData = "";
-    realpath(relativePath.c_str(), resolvedPath);
-    std::ifstream file(resolvedPath, std::ios::binary);
-    htmlData.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: image/png\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
-    file.close();
-    send(client_fd, httpRes.c_str(), httpRes.length(), 0);
-}
 
 void response_errors(int client_fd, int code, const t_config & data) {
     std::string htmlData = "";
-    if (code == 404)
+    std::string res_status = "";
+    if (code == 404) {
         htmlData = get_response_message(data.error404);
-    else if (code == 500)
+        res_status = "404 Not Found";   
+    } else if (code == 500) {
         htmlData = get_response_message(data.error500);
-    else if (code == 400)
+        res_status = "500 Internal Server Error";
+    } else if (code == 400) {
         htmlData = get_response_message(data.error400);
-    else if (code == 408)
+        res_status = "400 Bad Request";
+    } else if (code == 408) {
         htmlData = get_response_message(data.error408);
-    std::string httpResq = "HTTP/1.1 404 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
-    send(client_fd, httpResq.c_str(), httpResq.length(), 0);
-}
-
-void documents_respons(int client_fd, const HttpRequest & req, const t_config & data) {
-    std::string htmlData = get_response_message(req.path);
-    if (htmlData == "error")
-        response_errors(client_fd, 404, data);
-    else {
-        std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
-        send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+        res_status = "408 Request Timeout";
+    } else if (code == 413) {
+        htmlData = get_response_message(data.error413);
+        res_status = "413 Payload Too Large";
+    }else if (code == 403) {
+        htmlData = get_response_message(data.error403);
+        res_status = "403 Forbidden";
     }
+    std::string httpResq = "HTTP/1.1 " + res_status + "\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+    send(client_fd, httpResq.c_str(), httpResq.length(), 0);
 }
 
 void prinHttpRequest(HttpRequest & req) {
@@ -98,16 +88,6 @@ void prinHttpRequest(HttpRequest & req) {
         std::cout << "QUERY : " << req.query << std::endl;
     }
 }
-
-bool is_request_img(HttpRequest & req) {
-    std::string imgType[] = {".png", ".jpg", ".jpeg", ".gif", ".ico"};
-    for (size_t i = 0; i < 5; i++) {
-        if (req.path.find(imgType[i]) != SIZE_T_MAX)
-            return true;
-    }
-    return false;
-}
-
 
 void Server::serve(const t_config & data) {
     int server_fd;
@@ -166,25 +146,7 @@ void Server::serve(const t_config & data) {
                     }
                 }
                 req = parseHttpRequest(requestBody);
-                if (req.path.find(".php") != SIZE_T_MAX)
-                    send(client_fd, run_cgi(req).c_str(), run_cgi(req).length(), 0);
-                else if (req.method == "POST") {
-                    handle_post_requst(req);
-                    send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-                }
-                else if (req.path == "/" ) {
-                    ssize_t i = send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-                    if (i == -1)
-                        response_errors(client_fd, 500, data);
-                }
-                else if (req.method == "GET") {
-                    if (is_request_img(req))
-                        image_response(req, client_fd);
-                    else
-                        documents_respons(client_fd, req, data);
-                }else
-                    response_errors(client_fd, 400, data);
-                clear_httprequest(req);
+                handle_request(req, client_fd, data);
             }
             close(client_fd);
         }
@@ -192,9 +154,21 @@ void Server::serve(const t_config & data) {
     close(server_fd);
 }
 
+void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
+    if (req.method == "POST") {   
+        handle_post_requst(req);
+        send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+    }
+    if (req.method == "GET")
+        handle_get_requst(req, client_fd, data);
+    else if (req.method == "DELETE")
+        response_errors(client_fd, 400, data);
+    clear_httprequest(req);
+}
+
 void save_file(HttpRequest & req) {
     std::string root = ROOT;
-    std::string path = root + "/assets/" +  req.file_name[0];
+    std::string path = root + "/uploads/" +  req.file_name[0];
     std::ofstream ofs;
     ofs.open(path, std::ofstream::out | std::ofstream::trunc);
     if (!ofs)
@@ -204,7 +178,7 @@ void save_file(HttpRequest & req) {
     ofs.close();
 }
 
-void Server::handle_post_requst(HttpRequest & __unused req) {
+void Server::handle_post_requst(HttpRequest &  req) {
     for (size_t i = 0; i < req.form_data.size(); i++) {
        if (req.content_type[i] == "file_upload")
             save_file(req);
@@ -212,6 +186,111 @@ void Server::handle_post_requst(HttpRequest & __unused req) {
             std::cout << req.content_names[i] << " : " << req.form_data[i] << std::endl;
         }
     }
+}
+
+bool isDirectory(const char* path) {
+    struct stat statResult;
+    if (stat(path, &statResult) != 0)
+        return false;
+    return S_ISDIR(statResult.st_mode);
+}
+
+
+void directory_response(HttpRequest & req, int & client_fd, const t_config & data) {
+    std::string full_path = std::string(ROOT) + req.path;
+    char resolvedPath[PATH_MAX];
+    realpath(full_path.c_str(), resolvedPath);
+    std::string htmlData = "";
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir(resolvedPath)) != NULL) {
+        htmlData += "<html><head><title>Index of " + req.path + "</title></head><body><h1>Directory : " + req.path + "</h1><hr><pre style='background-color: black;padding:20px; border-radius:10px;'>";
+        while ((ent = readdir(dir)) != NULL) {
+            if (std::string(ent->d_name) != "." && std::string(ent->d_name) != "..")
+                htmlData += "<a style='color:red; font-size:50px;text-decoration: none' href=\"" + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
+        }
+        htmlData += "</pre>";
+        closedir (dir);
+    } else {
+        response_errors(client_fd, 404, data);
+        return;
+    }
+    std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+    send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+}
+
+void file_response(HttpRequest & __unused req, int & client_fd, const t_config & __unused data, char * resolvedPath) {
+    std::ifstream file(resolvedPath, std::ios::binary);
+
+    if (!file.is_open()) {
+        response_errors(client_fd, 404, data);
+        return;
+    }
+
+    // Determine file size
+    file.seekg(0, std::ios::end);
+    //check if file size is bigger than 10MB
+    if (file.tellg() > 10000000) {
+        response_errors(client_fd, 413, data);
+        return;
+    }
+    std::streamsize fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Read the entire file into a buffer
+    std::vector<char> buffer(fileSize);
+    file.read(buffer.data(), fileSize);
+
+    // Determine the file extension to set the appropriate Content-Type
+    std::string extension = resolvedPath;
+    size_t dotPos = extension.find_last_of('.');
+    if (dotPos != std::string::npos) {
+        extension = extension.substr(dotPos + 1);
+    }
+
+    std::string contentType;
+    if (extension == "html") {
+        contentType = "text/html";
+    } else if (extension == "jpg" || extension == "jpeg") {
+        contentType = "image/jpeg";
+    } else if (extension == "png") {
+        contentType = "image/png";
+    } else
+        contentType = "application/octet-stream";
+
+    // Construct the HTTP response
+    std::ostringstream httpRes;
+    httpRes << "HTTP/1.1 200 OK\n"
+            << "Content-Type: " << contentType << "\n"
+            << "Content-Length: " << fileSize << "\n\n";
+
+    send(client_fd, httpRes.str().c_str(), httpRes.str().length(), 0);
+    send(client_fd, buffer.data(), fileSize, 0);
+}
+
+void get_data_response(HttpRequest & req, int & client_fd, const t_config & data) {
+    std::string full_path = std::string(ROOT) + req.path;
+    char resolvedPath[PATH_MAX];
+    realpath(full_path.c_str(), resolvedPath);
+    //chck permission
+    if (access(resolvedPath, R_OK) == -1) {
+        response_errors(client_fd, 403, data);
+        return;
+    }
+    //check if file exist
+    if (access(resolvedPath, F_OK) == -1)
+        response_errors(client_fd, 404, data);
+    else if (isDirectory(resolvedPath))
+        directory_response(req, client_fd, data);
+    else
+        file_response(req, client_fd, data, resolvedPath);
+}
+
+void Server::handle_get_requst(HttpRequest &  req, int & client_fd, const t_config & data) {
+    if (req.path == "/" && !req.has_query)
+        send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+    else if (!req.has_body)
+        get_data_response(req, client_fd, data);
 }
 
 void clear_httprequest(HttpRequest & req) {

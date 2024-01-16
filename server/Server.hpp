@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/15 17:23:52 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/16 13:22:13 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,8 @@ class Server {
     Server();
     void serve(const t_config & data);
     void handle_post_requst(HttpRequest &);
+    void handle_get_requst(HttpRequest &, int &, const t_config &);
+    void handle_request(HttpRequest & req, int & client_fd, const t_config & data);
     ~Server();
 };
 

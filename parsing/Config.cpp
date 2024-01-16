@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/04 12:42:01 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/16 14:57:52 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,10 @@ void Config::parsConfigFile(std::string confFile) {
           s_conf.error408 =  grepValue(line, "error_page 408");
         else if (line.find("error_page 400") == 2)
           s_conf.error400 =  grepValue(line, "error_page 400");
+        else if (line.find("error_page 413") == 2)
+          s_conf.error413 =  grepValue(line, "error_page 413");
+        else if (line.find("error_page 403") == 2)
+          s_conf.error403 =  grepValue(line, "error_page 403");
         else
            throw confFileError();
       }

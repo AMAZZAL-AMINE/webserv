@@ -25,17 +25,6 @@ std::string urlDecode(const std::string& input) {
     return result;
 }
 
-
-bool is_request_valid(const std::string & request) {
-  if (request.find("GET") == SIZE_T_MAX && request.find("POST") == SIZE_T_MAX)
-    return false;
-  if (request.find("HTTP/1.1") == SIZE_T_MAX)
-    return false;
-  if (request.find("Host") == SIZE_T_MAX)
-    return false;
-  return true;
-}
-
 std::map<std::string, std::string> get_header(std::string & key, HttpRequest & httpRequest) {
   for (std::map<std::string, std::string>::iterator it = httpRequest.headers.begin(); it != httpRequest.headers.end(); it++) {
     if (it->first == key)
@@ -373,12 +362,6 @@ void parst_get_query(std::string query, HttpRequest & httpRequest) {
 
 HttpRequest parseHttpRequest(const std::string & request) {
   HttpRequest httpRequest;
-  httpRequest.is_valid = true;
-  if (is_request_valid(request) == false) {
-    httpRequest.is_valid = false;
-    httpRequest.ifnotvalid_code_status = 400;
-    return httpRequest;
-  }
   std::istringstream stream(request);
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
   httpRequest.headers = get_headers(stream);
