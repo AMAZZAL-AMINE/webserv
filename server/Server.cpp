@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/16 16:13:44 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/17 17:27:49 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,9 @@ void response_errors(int client_fd, int code, const t_config & data) {
     }else if (code ==  405) {
         htmlData = get_response_message(data.error405);
         res_status = "405 Method Not Allowed";
+    }else if (code ==  501) {
+        htmlData = get_response_message(data.error501);
+        res_status = "501 Not Implemented";
     }
     std::string httpResq = "HTTP/1.1 " + res_status + "\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
     send(client_fd, httpResq.c_str(), httpResq.length(), 0);
@@ -126,6 +129,10 @@ void Server::serve(const t_config & data) {
             else {
                 std::string requestBody(buffer, valread);
                 HttpRequest req = parseHttpRequest(requestBody);
+                if (!req.is_valid) {
+                    response_errors(client_fd, req.ifnotvalid_code_status, data);
+                    continue;
+                }
                 if (buffer[0] == '\0')
                     continue;
                 int reded_value = req.content_length;
@@ -148,6 +155,7 @@ void Server::serve(const t_config & data) {
                     }
                 }
                 req = parseHttpRequest(requestBody);
+                std::cout << requestBody + "\n";
                 handle_request(req, client_fd, data);
             }
             close(client_fd);
@@ -209,10 +217,10 @@ void directory_response(HttpRequest & req, int & client_fd, const t_config & dat
     DIR *dir;
     struct dirent *ent;
     if ((dir = opendir(resolvedPath)) != NULL) {
-        htmlData += "<html><head><title>Index of " + req.path + "</title></head><body><h1>Directory : " + req.path + "</h1><hr><pre style='background-color: black;padding:20px; border-radius:10px;'>";
+        htmlData += "<html><head><title>Index of " + req.path + "</title></head><body><h1>Directory : " + req.path + "</h1><hr><pre>";
         while ((ent = readdir(dir)) != NULL) {
             if (std::string(ent->d_name) != "." && std::string(ent->d_name) != "..")
-                htmlData += "<a style='color:red; font-size:50px;text-decoration: none' href=\"" + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
+                htmlData += "<a href=\"" + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
         }
         htmlData += "</pre>";
         closedir (dir);

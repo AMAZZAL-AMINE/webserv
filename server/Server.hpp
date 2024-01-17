@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/16 17:39:08 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/17 17:24:36 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ typedef struct HttpRequest {
   std::string path;
   std::string version;
   bool is_valid;
-  bool ifnotvalid_code_status;
+  int ifnotvalid_code_status;
   bool is_chunked;
   int content_length;
   int has_body;

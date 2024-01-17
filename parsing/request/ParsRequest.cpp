@@ -360,11 +360,30 @@ void parst_get_query(std::string query, HttpRequest & httpRequest) {
   }
 }
 
+int is_valid_request(HttpRequest & httpRequest) {
+  httpRequest.is_valid = false;
+  if (httpRequest.method == "POST") {
+    std::string content_type = "Transfer-Encoding";
+    std::map<std::string, std::string> head = get_header(content_type, httpRequest);
+    if (head[content_type] != "chunked") {
+      return (httpRequest.ifnotvalid_code_status = 501, -1);
+    }
+    else if (httpRequest.headers["Transfer-Encoding"] == "" &&  httpRequest.headers["Content-length"] == "") {
+      httpRequest.ifnotvalid_code_status = 400;
+      return -1;
+    }
+  }
+  httpRequest.is_valid = true;
+  return 1;
+}
+
 HttpRequest parseHttpRequest(const std::string & request) {
   HttpRequest httpRequest;
   std::istringstream stream(request);
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
   httpRequest.headers = get_headers(stream);
+  if (is_valid_request(httpRequest) == -1)
+    return httpRequest;
   if (httpRequest.method == "POST") {
     // std::cout << "REQUEST : \n" << request << std::endl;
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
