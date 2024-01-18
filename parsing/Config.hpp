@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/26 20:56:18 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/18 13:28:47 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/18 18:24:01 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ typedef struct t_config {
   std::string host_name;
   int         id;
   int         max_body_size;
+  std::string autoindex;
   std::string error404;
   std::string error500;
   std::string error408;

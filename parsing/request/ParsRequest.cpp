@@ -132,7 +132,6 @@ std::string get_name(std::string & line) {
   return name;
 }
 
-
 void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istringstream & stream) {
   std::string line;
   std::getline(stream, line);

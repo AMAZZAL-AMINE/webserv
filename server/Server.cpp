@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/18 17:26:15 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/18 18:40:10 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,13 +286,21 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
         return;
     }
     else if (isDirectory(resolvedPath))
-        directory_response(req, client_fd, data);
+        if (access((std::string(resolvedPath) + "/index.html").c_str(), F_OK) != -1)
+            file_response(req, client_fd, data, (char *)(std::string(resolvedPath) + "/index.html").c_str());
+        else {
+            std::cout << "autoindex : " << data.autoindex << std::endl;
+            if (data.autoindex == "off")
+                response_errors(client_fd, 403, data);
+            else if (data.autoindex == "on")
+                directory_response(req, client_fd, data);
+        }
     else
         file_response(req, client_fd, data, resolvedPath);
 }
 
 void Server::handle_get_requst(HttpRequest &  req, int & client_fd, const t_config & data) {
-    if (req.path == "/" && !req.has_query)
+    if (req.path == "/" && data.autoindex == "on" && !req.has_query) 
         send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
     else if (!req.has_body)
         get_response(req, client_fd, data);
