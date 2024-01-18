@@ -363,13 +363,10 @@ int is_valid_request(HttpRequest & httpRequest) {
   if (httpRequest.method == "POST") {
     std::string content_type = "Transfer-Encoding";
     std::map<std::string, std::string> head = get_header(content_type, httpRequest);
-    if (head[content_type] != "chunked") {
+    if (!head.empty() && head[content_type] != "chunked")
       return (httpRequest.ifnotvalid_code_status = 501, -1);
-    }
-    else if (httpRequest.headers["Transfer-Encoding"] == "" &&  httpRequest.headers["Content-length"] == "") {
-      httpRequest.ifnotvalid_code_status = 400;
-      return -1;
-    }
+    else if (httpRequest.headers["Transfer-Encoding"].empty()  &&  httpRequest.headers["Content-Length"].empty())
+      return (httpRequest.ifnotvalid_code_status = 400, -1);
   }
   httpRequest.is_valid = true;
   return 1;
@@ -381,8 +378,10 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config &  __un
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
   httpRequest.headers = get_headers(stream);
   httpRequest.is_valid = true;
-  if (is_valid_request(httpRequest) == -1)
+  if (is_valid_request(httpRequest) == -1) {
+    std::cout << request << std::endl;
     return httpRequest;
+  }
   if (httpRequest.method == "POST") {
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
