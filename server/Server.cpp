@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/17 17:27:49 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/18 12:40:00 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,7 +155,6 @@ void Server::serve(const t_config & data) {
                     }
                 }
                 req = parseHttpRequest(requestBody);
-                std::cout << requestBody + "\n";
                 handle_request(req, client_fd, data);
             }
             close(client_fd);
@@ -172,10 +171,8 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
         handle_get_requst(req, client_fd, data);
     else if (req.method == "DELETE")
         response_errors(client_fd, 400, data);
-    else  {
-        std::cout << "METHOD : " << req.method << std::endl;
+    else
         response_errors(client_fd, 405, data);
-    }
     clear_httprequest(req);
 }
 
@@ -276,7 +273,7 @@ void file_response(HttpRequest & __unused req, int & client_fd, const t_config &
     send(client_fd, buffer.data(), fileSize, 0);
 }
 
-void get_data_response(HttpRequest & req, int & client_fd, const t_config & data) {
+void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
     std::string full_path = std::string(ROOT) + req.path;
     char resolvedPath[PATH_MAX];
     realpath(full_path.c_str(), resolvedPath);
@@ -298,7 +295,7 @@ void Server::handle_get_requst(HttpRequest &  req, int & client_fd, const t_conf
     if (req.path == "/" && !req.has_query)
         send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
     else if (!req.has_body)
-        get_data_response(req, client_fd, data);
+        get_response(req, client_fd, data);
 }
 
 void clear_httprequest(HttpRequest & req) {

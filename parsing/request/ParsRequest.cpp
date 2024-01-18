@@ -75,11 +75,9 @@ std::string get_boundary_value(const std::string & request) {
 
 void pars_post_request(std::istringstream & stream, HttpRequest & __unused httpRequest) {
   std::string line;
-  std::cout << "POST REQUEST" << std::endl;
   std::getline(stream, line);
   int conut = 0;
   while (1)  {
-    std::cout << line << std::endl;
     std::getline(stream, line);
     if (line.find("boundary=-----") != SIZE_T_MAX && conut != 0)
       break;
@@ -382,10 +380,10 @@ HttpRequest parseHttpRequest(const std::string & request) {
   std::istringstream stream(request);
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
   httpRequest.headers = get_headers(stream);
+  httpRequest.is_valid = true;
   if (is_valid_request(httpRequest) == -1)
     return httpRequest;
   if (httpRequest.method == "POST") {
-    // std::cout << "REQUEST : \n" << request << std::endl;
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
       split_chunked_body(stream, httpRequest);
@@ -404,6 +402,7 @@ HttpRequest parseHttpRequest(const std::string & request) {
   else {
     httpRequest.has_body = false;
     httpRequest.is_chunked = false;
+    httpRequest.has_query = false;
     if (httpRequest.path.find("?") != SIZE_T_MAX) {
       std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
       parst_get_query(query, httpRequest);
