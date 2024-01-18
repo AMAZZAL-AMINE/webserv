@@ -375,7 +375,7 @@ int is_valid_request(HttpRequest & httpRequest) {
   return 1;
 }
 
-HttpRequest parseHttpRequest(const std::string & request) {
+HttpRequest parseHttpRequest(const std::string & request, const t_config &  __unused config) {
   HttpRequest httpRequest;
   std::istringstream stream(request);
   stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;

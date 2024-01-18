@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/18 12:40:00 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/18 13:33:30 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,7 @@ void Server::serve(const t_config & data) {
                 response_errors(client_fd, 500, data);
             else {
                 std::string requestBody(buffer, valread);
-                HttpRequest req = parseHttpRequest(requestBody);
+                HttpRequest req = parseHttpRequest(requestBody, data);
                 if (!req.is_valid) {
                     response_errors(client_fd, req.ifnotvalid_code_status, data);
                     continue;
@@ -154,7 +154,7 @@ void Server::serve(const t_config & data) {
                         }
                     }
                 }
-                req = parseHttpRequest(requestBody);
+                req = parseHttpRequest(requestBody, data);
                 handle_request(req, client_fd, data);
             }
             close(client_fd);
@@ -277,14 +277,14 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
     std::string full_path = std::string(ROOT) + req.path;
     char resolvedPath[PATH_MAX];
     realpath(full_path.c_str(), resolvedPath);
+    //check if file exist
+    if (access(resolvedPath, F_OK) == -1)
+        response_errors(client_fd, 404, data);
     //chck permission
     if (access(resolvedPath, R_OK) == -1) {
         response_errors(client_fd, 403, data);
         return;
     }
-    //check if file exist
-    if (access(resolvedPath, F_OK) == -1)
-        response_errors(client_fd, 404, data);
     else if (isDirectory(resolvedPath))
         directory_response(req, client_fd, data);
     else
