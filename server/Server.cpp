@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/19 17:11:00 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 17:14:23 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,7 +111,7 @@ void Server::serve(const t_config & data) {
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);
     fd_set fds;
-            std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << std::endl;
+    std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << std::endl;
     listen(server_fd, 3);
     timeval timeout;
     timeout.tv_sec = 15;
@@ -193,7 +193,7 @@ void save_file(HttpRequest & req) {
     if (!ofs)
         throw std::runtime_error("Could not open file for writing");
     ofs << req.form_data[0];
-    std::cout << "file uploaded" << std::endl;
+    std::cout << YELLOW << "[FILE SAVED - " << current_date() << "] " << RESET << path << std::endl;
     ofs.close();
 }
 
