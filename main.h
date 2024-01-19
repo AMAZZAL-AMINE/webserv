@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/19 16:45:02 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 17:54:05 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,6 @@ int _atoi_(std::string  str);
 void display_config(std::vector<std::vector<t_config> > http_config);
 HttpRequest parseHttpRequest(const std::string& request, const t_config & config);
 void clear_httprequest(HttpRequest & req);
-std::string  run_cgi(HttpRequest & __unused req, std::string content_type, std::string script_filename);
+std::string  run_cgi(HttpRequest & __unused req,const t_config & data , std::string content_type, std::string script_filename);
 std::string _itos_(int n);
 #endif

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/19 17:14:23 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 19:40:08 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,10 +172,19 @@ void Server::serve(const t_config & data) {
 }
 
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
-    if (req.method == "POST") {   
+    if (req.path.find(".php") != SIZE_T_MAX) {
+        std::string cgi_path = run_cgi(req, data,std::string("text/html"), std::string(ROOT) + req.path);
+        std::cout << std::string(ROOT) + req.path << std::endl;
+        send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << "  " << BG_WHITE << req.method << " " << req.path << std::endl;
+        return;
+    }
+    else if (req.method == "POST") {
         handle_post_requst(req);
+        // std::string cgi_path = run_cgi(req, data, std::string("text/html"), std::string(ROOT) + std::string("/php/post.php"));
+        // send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
         send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " " <<  BG_WHITE << BLACK << "[200 OK]" << RESET << "  " << req.method << " " << req.path << std::endl;
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " " << BG_WHITE << req.method << " " << req.path << std::endl;
     } else if (req.method == "GET")
         handle_get_requst(req, client_fd, data);
     else if (req.method == "DELETE")

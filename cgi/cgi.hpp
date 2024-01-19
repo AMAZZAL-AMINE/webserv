@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 13:37:02 by rouali            #+#    #+#             */
-/*   Updated: 2024/01/06 21:16:59 by rouali           ###   ########.fr       */
+/*   Updated: 2024/01/19 17:48:56 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 #include <iostream>
 #include <map>
 #include <unistd.h>
-#define CGI "/Users/rouali/Desktop/Webserv/cgi/php-cgi"
 
 class cgi
 {
@@ -28,6 +27,6 @@ class cgi
     public:
         cgi(std::string head, std::string body, std::string SCRIPT_NAME, std::string SCRIPT_FILENAME, std::string CONTENT_TYPE, std::string REQUEST_METHOD, std::string CONTENT_LENGTH, std::string QUERY_STRING, std::string SERVER_PROTOCOL, std::string SERVER_SOFTWARE, std::string SERVER_NAME, std::string GATEWAY_INTERFACE, std::string REDIRECT_STATUS);
         ~cgi();
-        std::string fill_env(std::string SCRIPT_FILENAME);
+        std::string fill_env(std::string SCRIPT_FILENAME, std::string CGI);
 };
 #endif

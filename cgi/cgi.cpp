@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/01/19 16:42:19 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 19:36:36 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ cgi::~cgi()
     delete[] envp;
 }
 
-std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
+std::string  cgi::fill_env(std::string SCRIPT_FILENAME, std::string CGI)
 {
 
     int status;
@@ -67,7 +67,6 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
     }
     if (pid == 0)
     {
-
         if (dup2(fd[1], 1) == -1)
         {
             std::cout << "dup2 error" << std::endl;
@@ -83,13 +82,14 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
         close(fd[1]);
 
         char **av = new char *[3];
-        av[0] = new char[std::strlen(CGI) + 1];
+        av[0] = new char[CGI.length() + 1];
         av[1] = new char[std::strlen(SCRIPT_FILENAME.c_str()) + 1];
         av[2] = NULL;
-        std::strcpy(av[0], CGI);
+        std::strcpy(av[0], CGI.c_str());
         std::strcpy(av[1], SCRIPT_FILENAME.c_str());
-        if (execve(CGI, av, envp) == -1)
+        if (execve(CGI.c_str(), av, envp) == -1)
         {
+            //print cmd
             std::cout << "execve error" << std::endl;
             exit(127);
         }
@@ -112,7 +112,10 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
             int byte = read(fd[0], buffer, 1023);
             if (byte <= 0)
                 break;
-            buffer[byte + 1] = '\0';
+            if (byte == 1023)
+                buffer[byte] = '\0';
+            else
+                buffer[byte + 1] = '\0';
             response += buffer;
         }
         return response;
@@ -120,30 +123,29 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
     return "";
 }
 
-std::string  run_cgi(HttpRequest & __unused req, std::string content_type, std::string script_filename)
+std::string  run_cgi(HttpRequest & __unused req,const t_config & data , std::string __unused content_type, std::string script_filename)
 {
-
     std::string head = req.method + " " + req.path  + " " + req.version + "\r\n";
-    std::string SCRIPT_NAME = "cgi.php";
+    std::string SCRIPT_NAME = script_filename; //"./cgi/cgi.php";
     std::string SCRIPT_FILENAME = script_filename; //"./cgi/cgi.php";
-    std::string CONTENT_TYPE = content_type; /*"text/html"*/
+    std::string CONTENT_TYPE = req.headers["Content-Type"];
     std::string REQUEST_METHOD = req.method;
-    std::string CONTENT_LENGTH = _itos_(req.content_length);
+    std::string CONTENT_LENGTH = _itos_(req.full_body.length());
     std::string QUERY_STRING = req.has_query ? req.query : "test=1";
     std::string SERVER_PROTOCOL = req.version;
     std::string SERVER_SOFTWARE = "localhost";
     std::string SERVER_NAME = "localhost";
     std::string GATEWAY_INTERFACE = "CGI/1.1";
     std::string REDIRECT_STATUS = "200";
-
     cgi my_cgi(head, "", SCRIPT_NAME, SCRIPT_FILENAME, CONTENT_TYPE,
                REQUEST_METHOD, CONTENT_LENGTH, QUERY_STRING, SERVER_PROTOCOL,
                SERVER_SOFTWARE, SERVER_NAME, GATEWAY_INTERFACE, REDIRECT_STATUS);
 
-    std::string script_excut = my_cgi.fill_env(SCRIPT_FILENAME);
+    std::string script_excut = my_cgi.fill_env(SCRIPT_FILENAME, data.cgi_path);
     size_t pos = script_excut.find("\r\n\r\n");
     std::string cgi_headers = script_excut.substr(0, pos);
     script_excut.erase(0, pos + 4);
     std::string html_res = "HTTP/1.1 200 OK\r\n"+cgi_headers +"\r\nContent-Length: " + std::to_string(script_excut.length()) +  "\r\n\r\n" + script_excut;
+    std::cout << GREEN << "CGI RESPONSE: " << RESET << std::endl;
     return html_res;
 }

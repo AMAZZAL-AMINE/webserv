@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/18 18:37:12 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 17:51:23 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,8 @@ void Config::parsConfigFile(std::string confFile) {
           s_conf.max_body_size =  _atoi_(grepValue(line, "max_body_size"));
         else if (line.find("autoindex") == 2)
           s_conf.autoindex =  grepValue(line, "autoindex");
+        else if (line.find("cgi_path") == 2)
+          s_conf.cgi_path =  grepValue(line, "cgi_path");
         else
            throw confFileError();
       }
