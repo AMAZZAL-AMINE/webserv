@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/17 17:24:36 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 16:18:38 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,9 +38,9 @@ typedef struct HttpRequest {
   std::string boundary_start;
   std::string boundary_end;
   bool is_ency_upl_file;
-  std::string query;
   std::map<std::string, std::string> headers;
-  std::string body;
+  std::string query;
+  std::string full_body;
 } HttpRequest;
 
 class Server {

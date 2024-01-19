@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/18 18:40:10 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 16:29:45 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,30 +47,32 @@ int setup_server(const t_config & data,struct sockaddr_in & address) {
 void response_errors(int client_fd, int code, const t_config & data) {
     std::string htmlData = "";
     std::string res_status = "";
-    if (code == 404) {
-        htmlData = get_response_message(data.error404);
-        res_status = "404 Not Found";   
-    } else if (code == 500) {
-        htmlData = get_response_message(data.error500);
-        res_status = "500 Internal Server Error";
-    } else if (code == 400) {
-        htmlData = get_response_message(data.error400);
-        res_status = "400 Bad Request";
-    } else if (code == 408) {
-        htmlData = get_response_message(data.error408);
-        res_status = "408 Request Timeout";
-    } else if (code == 413) {
-        htmlData = get_response_message(data.error413);
-        res_status = "413 Payload Too Large";
-    }else if (code == 403) {
-        htmlData = get_response_message(data.error403);
-        res_status = "403 Forbidden";
-    }else if (code ==  405) {
-        htmlData = get_response_message(data.error405);
-        res_status = "405 Method Not Allowed";
-    }else if (code ==  501) {
-        htmlData = get_response_message(data.error501);
-        res_status = "501 Not Implemented";
+    switch(code) {
+        case 404 :
+            htmlData = get_response_message(data.error404);
+            res_status = "404 Not Found";   
+        case 500 :
+            htmlData = get_response_message(data.error500);
+            res_status = "500 Internal Server Error";
+        case 400 :
+            htmlData = get_response_message(data.error400);
+            res_status = "400 Bad Request";
+        case 408 :
+            htmlData = get_response_message(data.error408);
+            res_status = "408 Request Timeout";
+        case 413 :
+            htmlData = get_response_message(data.error413);
+            res_status = "413 Payload Too Large";
+        case 403 :
+            htmlData = get_response_message(data.error403);
+            res_status = "403 Forbidden";
+        case  405 :
+            htmlData = get_response_message(data.error405);
+            res_status = "405 Method Not Allowed";
+        case 501 :
+            htmlData = get_response_message(data.error501);
+            res_status = "501 Not Implemented";
+        break;
     }
     std::string httpResq = "HTTP/1.1 " + res_status + "\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
     send(client_fd, httpResq.c_str(), httpResq.length(), 0);
@@ -88,7 +90,7 @@ void prinHttpRequest(HttpRequest & req) {
     }
     if (req.has_body == true) {   
         std::cout << "BODY : " << std::endl;
-            std::cout << req.body << std::endl;
+            std::cout << req.full_body << std::endl;
     }else if (req.has_query == true) {
         std::cout << "QUERY : " << req.query << std::endl;
     }
@@ -318,7 +320,7 @@ void clear_httprequest(HttpRequest & req) {
     req.has_query = false;
     req.query = "";
     req.headers.clear();
-    req.body.clear();
+    req.full_body.clear();
 }
 
 Server::~Server() {}

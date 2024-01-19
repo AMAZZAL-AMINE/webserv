@@ -40,14 +40,14 @@ void get_body(std::istringstream & stream, HttpRequest & httpRequest) {
     while (std::getline(stream, body)) {
       if (body == "\r")
         break;
-      httpRequest.body+= body;
+      httpRequest.full_body+= body;
     }
   }else {
     while (std::getline(stream, body)) {
-      httpRequest.body += body + "\n";
+      httpRequest.full_body += body + "\n";
     }
   }
-  if (httpRequest.body.size() == 0)
+  if (httpRequest.full_body.size() == 0)
     httpRequest.has_body = false;
   else
     httpRequest.has_body = true;
@@ -382,6 +382,7 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config &  __un
     return httpRequest;
   }
   if (httpRequest.method == "POST") {
+    httpRequest.full_body = request.substr(request.find("\r\n\r\n") + 4);
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
       split_chunked_body(stream, httpRequest);
@@ -403,6 +404,7 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config &  __un
     httpRequest.has_query = false;
     if (httpRequest.path.find("?") != SIZE_T_MAX) {
       std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+      httpRequest.query = query;
       parst_get_query(query, httpRequest);
       httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
       httpRequest.has_query = true;
