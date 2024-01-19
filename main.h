@@ -6,13 +6,33 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/18 18:08:35 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 16:45:02 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef MAIN_H
 #define MAIN_H
-
+//color
+#define RED "\033[0;31m"
+#define GREEN "\033[0;32m"
+#define RESET "\033[0m"
+#define YELLOW "\033[0;33m"
+#define BLUE "\033[0;34m"
+#define CYAN "\033[0;36m"
+#define MAGENTA "\033[0;35m" 
+#define BOLD "\033[1m"
+#define UNDERLINE "\033[4m"
+#define BLINK "\033[5m"
+#define REVERSE "\033[7m"
+#define HIDDEN "\033[8m"
+#define BLACK "\033[30m"
+#define WHITE "\033[37m"
+//gradient color
+#define GRADIENT "\033[38;5;"
+#define GRADIENT_END "m"
+//background color
+#define BG_BLACK "\033[40m"
+#define BG_WHITE "\033[47m"
 
 #include <iostream>
 #include <fstream>
@@ -44,6 +64,6 @@ int _atoi_(std::string  str);
 void display_config(std::vector<std::vector<t_config> > http_config);
 HttpRequest parseHttpRequest(const std::string& request, const t_config & config);
 void clear_httprequest(HttpRequest & req);
-std::string  run_cgi(HttpRequest & req);
+std::string  run_cgi(HttpRequest & __unused req, std::string content_type, std::string script_filename);
 std::string _itos_(int n);
 #endif

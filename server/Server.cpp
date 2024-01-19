@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/19 16:29:45 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 17:11:00 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,13 @@ std::string get_response_message(std::string fhtml) {
     buffer << file.rdbuf();
     file.close();
     return buffer.str();
+}
+
+char *current_date() {
+    time_t now = time(0);
+    char *dt = std::ctime(&now);
+    dt[strlen(dt) - 1] = '\0';
+    return dt;
 }
 
 Server::Server() {
@@ -76,6 +83,7 @@ void response_errors(int client_fd, int code, const t_config & data) {
     }
     std::string httpResq = "HTTP/1.1 " + res_status + "\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
     send(client_fd, httpResq.c_str(), httpResq.length(), 0);
+    std::cout << RED << "[RESPONSE - " << current_date() << "] " <<  BG_WHITE << BLACK << res_status << RESET << std::endl;
 }
 
 void prinHttpRequest(HttpRequest & req) {
@@ -103,9 +111,7 @@ void Server::serve(const t_config & data) {
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);
     fd_set fds;
-    std::cout << "server runing on "<< std::endl;
-    std::cout << "      local : localhost:" << data.port << std::endl;
-    std::cout << "      network : 10.11.3.5:" << data.port << std::endl;
+            std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << std::endl;
     listen(server_fd, 3);
     timeval timeout;
     timeout.tv_sec = 15;
@@ -169,6 +175,7 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
     if (req.method == "POST") {   
         handle_post_requst(req);
         send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " " <<  BG_WHITE << BLACK << "[200 OK]" << RESET << "  " << req.method << " " << req.path << std::endl;
     } else if (req.method == "GET")
         handle_get_requst(req, client_fd, data);
     else if (req.method == "DELETE")

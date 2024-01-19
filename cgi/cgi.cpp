@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/01/07 15:47:48 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 16:42:19 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,18 +120,17 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
     return "";
 }
 
-std::string  run_cgi(HttpRequest & __unused req)
+std::string  run_cgi(HttpRequest & __unused req, std::string content_type, std::string script_filename)
 {
 
     std::string head = req.method + " " + req.path  + " " + req.version + "\r\n";
     std::string SCRIPT_NAME = "cgi.php";
-    std::string SCRIPT_FILENAME = "./cgi/cgi.php";
-    std::string CONTENT_TYPE = "text/html";
-    std::string REQUEST_METHOD = "GET";
-    std::string CONTENT_LENGTH = "0";
+    std::string SCRIPT_FILENAME = script_filename; //"./cgi/cgi.php";
+    std::string CONTENT_TYPE = content_type; /*"text/html"*/
+    std::string REQUEST_METHOD = req.method;
+    std::string CONTENT_LENGTH = _itos_(req.content_length);
     std::string QUERY_STRING = req.has_query ? req.query : "test=1";
-    std::cout << QUERY_STRING << std::endl;
-    std::string SERVER_PROTOCOL = "HTTP/1.1";
+    std::string SERVER_PROTOCOL = req.version;
     std::string SERVER_SOFTWARE = "localhost";
     std::string SERVER_NAME = "localhost";
     std::string GATEWAY_INTERFACE = "CGI/1.1";
