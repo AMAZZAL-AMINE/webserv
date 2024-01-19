@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/19 19:49:32 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/19 20:41:24 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,8 +114,10 @@ void Server::serve(const t_config & data) {
         int ret = select(server_fd + 1, &fds, NULL, NULL, &timeout);
         
         int client_fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
-        if (ret == 0)
+        if (ret == 0) {
            response_errors(client_fd, 408, data);
+            continue;
+        }
         else if (ret < 0)
             response_errors(client_fd, 500, data);
         else if (ret == -1)
@@ -175,7 +177,7 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
         // std::string cgi_path = run_cgi(req, data, std::string("text/html"), std::string(ROOT) + std::string("/php/post.php"));
         // send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
         send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " " << BG_WHITE << req.method << " " << req.path << std::endl;
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " " << BG_WHITE << req.method << " " << req.path << RESET << std::endl;
     } else if (req.method == "GET")
         handle_get_requst(req, client_fd, data);
     else if (req.method == "DELETE")
@@ -213,7 +215,6 @@ bool isDirectory(const char* path) {
         return false;
     return S_ISDIR(statResult.st_mode);
 }
-
 
 void directory_response(HttpRequest & req, int & client_fd, const t_config & data) {
     std::string full_path = std::string(ROOT) + req.path;
