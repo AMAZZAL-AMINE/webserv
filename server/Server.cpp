@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/20 13:21:46 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/20 13:46:53 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,11 +116,10 @@ void Server::serve(const t_config & data) {
         if (ret == 0) {
            response_errors(client_fd, 408, data);
             continue;
+        } else if (ret < 0) {
+            response_errors(client_fd, 500, data);
+            continue;
         }
-        else if (ret < 0)
-            response_errors(client_fd, 500, data);
-        else if (ret == -1)
-            response_errors(client_fd, 500, data);
         else {
             char buffer[3000] = {0};
             ssize_t valread = recv(client_fd, buffer, sizeof(buffer), 0);
