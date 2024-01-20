@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/19 17:51:23 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/20 12:48:43 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,28 +49,30 @@ void Config::parsConfigFile(std::string confFile) {
           s_conf.server_name =  grepValue(line, "server_name");
         else if (line.find("host_name") == 2)
            s_conf.host_name =  grepValue(line, "host_name");
-        else if (line.find("error_page 404") == 2)
-          s_conf.error404 =  grepValue(line, "error_page 404");
-        else if (line.find("error_page 500") == 2)
-          s_conf.error500 =  grepValue(line, "error_page 500");
-        else if (line.find("error_page 408") == 2)
-          s_conf.error408 =  grepValue(line, "error_page 408");
-        else if (line.find("error_page 400") == 2)
-          s_conf.error400 =  grepValue(line, "error_page 400");
-        else if (line.find("error_page 413") == 2)
-          s_conf.error413 =  grepValue(line, "error_page 413");
-        else if (line.find("error_page 403") == 2)
-          s_conf.error403 =  grepValue(line, "error_page 403");
-        else if (line.find("error_page 405") == 2)
-          s_conf.error405 =  grepValue(line, "error_page 405");
-        else if (line.find("error_page 501") == 2)
-          s_conf.error501 =  grepValue(line, "error_page 501");
+        else if (line.find("error_page_404") == 2)
+          s_conf.error404 =  grepValue(line, "error_page_404");
+        else if (line.find("error_page_500") == 2)
+          s_conf.error500 =  grepValue(line, "error_page_500");
+        else if (line.find("error_page_408") == 2)
+          s_conf.error408 =  grepValue(line, "error_page_408");
+        else if (line.find("error_page_400") == 2)
+          s_conf.error400 =  grepValue(line, "error_page_400");
+        else if (line.find("error_page_413") == 2)
+          s_conf.error413 =  grepValue(line, "error_page_413");
+        else if (line.find("error_page_403") == 2)
+          s_conf.error403 =  grepValue(line, "error_page_403");
+        else if (line.find("error_page_405") == 2)
+          s_conf.error405 =  grepValue(line, "error_page_405");
+        else if (line.find("error_page_501") == 2)
+          s_conf.error501 =  grepValue(line, "error_page_501");
         else if (line.find("max_body_size") == 2)
           s_conf.max_body_size =  _atoi_(grepValue(line, "max_body_size"));
         else if (line.find("autoindex") == 2)
           s_conf.autoindex =  grepValue(line, "autoindex");
         else if (line.find("cgi_path") == 2)
           s_conf.cgi_path =  grepValue(line, "cgi_path");
+        else if (line.find("root") == 2)
+          s_conf.root =  grepValue(line, "root");
         else
            throw confFileError();
       }

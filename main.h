@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/19 17:54:05 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/20 12:58:00 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,6 @@
 
 #define TIME_OUT 1000
 
-#define ROOT "html_root"
 
 int _atoi_(std::string  str);
 void display_config(std::vector<std::vector<t_config> > http_config);

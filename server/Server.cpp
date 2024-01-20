@@ -6,20 +6,19 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/19 20:41:24 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/20 13:21:46 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../main.h"
 
-std::string get_response_message(std::string fhtml) {
-    std::string root = ROOT;
-    fhtml = root + "/" + fhtml;
+std::string get_response_message(std::string fhtml, const t_config & data) {
+    fhtml = data.root + "/" + fhtml;
     char resolvedPath[PATH_MAX];
     realpath(fhtml.c_str(), resolvedPath);
     std::fstream file(resolvedPath);
     if (!file.is_open())
-        return "error";
+        return "<h1 >ROOT NOT FOUND</h1>";
     std::stringstream buffer;
     buffer << file.rdbuf();
     file.close();
@@ -33,8 +32,8 @@ char *current_date() {
     return dt;
 }
 
-Server::Server() {
-    std::string htmlData = get_response_message("index.html");
+Server::Server(const t_config & data) {
+    std::string htmlData = get_response_message("index.html", data);
     this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
 }
 int setup_server(const t_config & data,struct sockaddr_in & address) {
@@ -56,35 +55,35 @@ void response_errors(int client_fd, int code, const t_config & data) {
     std::string res_status = "";
     switch(code) {
         case 404 :
-            htmlData = get_response_message(data.error404);
+            htmlData = get_response_message(data.error404, data);
             res_status = "404 Not Found";   
             break;
         case 500 :
-            htmlData = get_response_message(data.error500);
+            htmlData = get_response_message(data.error500, data);
             res_status = "500 Internal Server Error";
             break;
         case 400 :
-            htmlData = get_response_message(data.error400);
+            htmlData = get_response_message(data.error400, data);
             res_status = "400 Bad Request";
             break;
         case 408 :
-            htmlData = get_response_message(data.error408);
+            htmlData = get_response_message(data.error408, data);
             res_status = "408 Request Timeout";
             break;
         case 413 :
-            htmlData = get_response_message(data.error413);
+            htmlData = get_response_message(data.error413, data);
             res_status = "413 Payload Too Large";
             break;
         case 403 :
-            htmlData = get_response_message(data.error403);
+            htmlData = get_response_message(data.error403, data);
             res_status = "403 Forbidden";
             break;
         case  405 :
-            htmlData = get_response_message(data.error405);
+            htmlData = get_response_message(data.error405, data);
             res_status = "405 Method Not Allowed";
             break;
         case 501 :
-            htmlData = get_response_message(data.error501);
+            htmlData = get_response_message(data.error501, data);
             res_status = "501 Not Implemented";
             break;
         default :
@@ -164,17 +163,31 @@ void Server::serve(const t_config & data) {
     close(server_fd);
 }
 
+int check_file_exist(std::string path) {
+    //check permission
+    if (access(path.c_str(), F_OK) == -1)
+        return 404;
+    else if (access(path.c_str(), R_OK) == -1)
+        return 403;
+    return 0;
+}
+
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
     if (req.path.find(".php") != SIZE_T_MAX) {
-        std::string cgi_path = run_cgi(req, data,std::string("text/html"), std::string(ROOT) + req.path);
-        std::cout << std::string(ROOT) + req.path << std::endl;
+        std::string path = data.root + req.path;
+        if (check_file_exist(path) != 0) {
+            response_errors(client_fd, check_file_exist(path), data);
+            return;
+        }
+        std::string cgi_path = run_cgi(req, data,std::string("text/html"), path);
+        std::cout << path << std::endl;
         send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << "  " << BG_WHITE << req.method << " " << req.path << std::endl;
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << "  " << BG_WHITE << req.method << " " << req.path << RESET << std::endl;
         return;
     }
     else if (req.method == "POST") {
-        handle_post_requst(req);
-        // std::string cgi_path = run_cgi(req, data, std::string("text/html"), std::string(ROOT) + std::string("/php/post.php"));
+        handle_post_requst(req, data);
+        // std::string cgi_path = run_cgi(req, data, std::string("text/html"), data.root + std::string("/php/post.php"));
         // send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
         send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
         std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " " << BG_WHITE << req.method << " " << req.path << RESET << std::endl;
@@ -187,9 +200,8 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
     clear_httprequest(req);
 }
 
-void save_file(HttpRequest & req) {
-    std::string root = ROOT;
-    std::string path = root + "/uploads/" +  req.file_name[0];
+void save_file(HttpRequest & req, const t_config & __unused data) {
+    std::string path = data.root + "/uploads/" +  req.file_name[0];
     std::ofstream ofs;
     ofs.open(path, std::ofstream::out | std::ofstream::trunc);
     if (!ofs)
@@ -199,10 +211,10 @@ void save_file(HttpRequest & req) {
     ofs.close();
 }
 
-void Server::handle_post_requst(HttpRequest &  req) {
+void Server::handle_post_requst(HttpRequest &  req, const t_config & data) {
     for (size_t i = 0; i < req.form_data.size(); i++) {
        if (req.content_type[i] == "file_upload")
-            save_file(req);
+            save_file(req, data);
         else {
             std::cout << req.content_names[i] << " : " << req.form_data[i] << std::endl;
         }
@@ -217,7 +229,7 @@ bool isDirectory(const char* path) {
 }
 
 void directory_response(HttpRequest & req, int & client_fd, const t_config & data) {
-    std::string full_path = std::string(ROOT) + req.path;
+    std::string full_path = data.root + req.path;
     char resolvedPath[PATH_MAX];
     realpath(full_path.c_str(), resolvedPath);
     std::string htmlData = "";
@@ -284,18 +296,14 @@ void file_response(HttpRequest & __unused req, int & client_fd, const t_config &
 }
 
 void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
-    std::string full_path = std::string(ROOT) + req.path;
+    std::string full_path = data.root + req.path;
     char resolvedPath[PATH_MAX];
     realpath(full_path.c_str(), resolvedPath);
     //check if file exist
-    if (access(resolvedPath, F_OK) == -1)
-        response_errors(client_fd, 404, data);
-    //chck permission
-    if (access(resolvedPath, R_OK) == -1) {
-        response_errors(client_fd, 403, data);
+    if (check_file_exist(resolvedPath) != 0) {
+        response_errors(client_fd, check_file_exist(resolvedPath), data);
         return;
-    }
-    else if (isDirectory(resolvedPath))
+    } else if (isDirectory(resolvedPath))
         if (access((std::string(resolvedPath) + "/index.html").c_str(), F_OK) != -1)
             file_response(req, client_fd, data, (char *)(std::string(resolvedPath) + "/index.html").c_str());
         else {
