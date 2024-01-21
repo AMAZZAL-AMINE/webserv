@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/20 12:48:43 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/21 17:45:43 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,8 @@ void Config::parsConfigFile(std::string confFile) {
           s_conf.error405 =  grepValue(line, "error_page_405");
         else if (line.find("error_page_501") == 2)
           s_conf.error501 =  grepValue(line, "error_page_501");
+        else if (line.find("error_page_409") == 2)
+          s_conf.error409 =  grepValue(line, "error_page_409");
         else if (line.find("max_body_size") == 2)
           s_conf.max_body_size =  _atoi_(grepValue(line, "max_body_size"));
         else if (line.find("autoindex") == 2)

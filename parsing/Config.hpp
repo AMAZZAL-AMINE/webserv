@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/26 20:56:18 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/20 12:45:13 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/21 17:45:14 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ typedef struct t_config {
   std::string error403;
   std::string error405;
   std::string error501;
+  std::string error409;
 } t_config;
 
 class Config {

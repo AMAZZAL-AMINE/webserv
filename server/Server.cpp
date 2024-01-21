@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/20 13:46:53 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/21 17:52:09 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,10 @@ void response_errors(int client_fd, int code, const t_config & data) {
         case 501 :
             htmlData = get_response_message(data.error501, data);
             res_status = "501 Not Implemented";
+            break;
+        case 409 :
+            htmlData = get_response_message(data.error409, data);
+            res_status = "409 Conflict";
             break;
         default :
             break;
@@ -172,7 +176,7 @@ int check_file_exist(std::string path) {
 }
 
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
-    if (req.path.find(".php") != SIZE_T_MAX) {
+    if (req.path.find(".php") != SIZE_T_MAX && req.method != "DELETE") {
         std::string path = data.root + req.path;
         if (check_file_exist(path) != 0) {
             response_errors(client_fd, check_file_exist(path), data);
@@ -193,10 +197,46 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
     } else if (req.method == "GET")
         handle_get_requst(req, client_fd, data);
     else if (req.method == "DELETE")
-        response_errors(client_fd, 400, data);
+        handle_delete_request(req, client_fd, data);
     else
         response_errors(client_fd, 405, data);
     clear_httprequest(req);
+}
+
+void handle_delete_request(HttpRequest & __unused req, int & __unused client_fd, const t_config  & __unused data) {
+    std::string path = data.root + req.path;
+    if (check_file_exist(path) != 0) {
+        response_errors(client_fd, check_file_exist(data.root + req.path), data);
+        return;
+    }
+    if (isDirectory(path.c_str())) {
+        //check if directory not empty 
+        DIR *dir;
+        struct dirent *ent;
+        if ((dir = opendir(path.c_str())) != NULL) {
+            while ((ent = readdir(dir)) != NULL) {
+                if (std::string(ent->d_name) != "." && std::string(ent->d_name) != "..") {
+                    response_errors(client_fd, 409, data);
+                    return;
+                }
+            }
+            closedir (dir);
+        }
+    }
+    //check if it has permission to delete
+    if (access(path.c_str(), W_OK) == -1) {
+        response_errors(client_fd, 403, data);
+        return;
+    }
+    if (std::remove(path.c_str()) != 0) {
+        std::cout << "PATH : " << path << std::endl;
+        response_errors(client_fd, 500, data);
+    }
+    else {
+        std::string html_data = "<html><head><title>Index of " + req.path + "</title></head><body><h1>File : " + req.path + " deleted</h1><hr><pre>";
+        std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(html_data.length()) + "\n\n" + html_data + "\n";
+        send(client_fd, html_data.c_str(), html_data.length(), 0);
+    }
 }
 
 void save_file(HttpRequest & req, const t_config & __unused data) {
