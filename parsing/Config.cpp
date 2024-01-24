@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/21 17:45:43 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/24 15:14:27 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ void Config::parsConfigFile(std::string confFile) {
     throw  confFileError();
   size_t server_position;
   while (std::getline(file, line)) {
-    std::vector<t_config> conf;
     t_config s_conf;
     server_position = line.find("server {");
     if (server_position != SIZE_T_MAX && server_position == 0) {
@@ -78,16 +77,14 @@ void Config::parsConfigFile(std::string confFile) {
         else
            throw confFileError();
       }
-      if (!s_conf.server_name.empty())
-        conf.push_back(s_conf);
     }
-    if (!conf.empty())
-      this->http_config.push_back(conf);
+    if (!s_conf.server_name.empty())
+      this->http_config.push_back(s_conf);
   }
 }
 
 
-const std::vector<std::vector<t_config> > &  Config::getConfig() const {
+const std::vector<t_config> &  Config::getConfig() const {
   return this->http_config;
 }
 

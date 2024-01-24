@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/26 20:56:18 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/21 17:45:14 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/24 15:14:34 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,11 +38,11 @@ typedef struct t_config {
 
 class Config {
   private :
-    std::vector<std::vector<t_config> > http_config;
+    std::vector<t_config> http_config;
   public :
     Config();
     void parsConfigFile(std::string confFile);
-    const std::vector<std::vector<t_config> > & getConfig() const;
+    const std::vector<t_config> & getConfig() const;
     ~Config();
 };
 
