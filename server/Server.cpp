@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/21 17:52:09 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/24 15:35:25 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ Server::Server(const t_config & data) {
     std::string htmlData = get_response_message("index.html", data);
     this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
 }
-int setup_server(const t_config & data,struct sockaddr_in & address) {
+int Server::setup_server(const t_config & data,struct sockaddr_in & address) {
     int server_fd;
     int opt = 1;
 
@@ -193,9 +193,11 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
         // std::string cgi_path = run_cgi(req, data, std::string("text/html"), data.root + std::string("/php/post.php"));
         // send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
         send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " " << BG_WHITE << req.method << " " << req.path << RESET << std::endl;
-    } else if (req.method == "GET")
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " "  << req.method << " " << req.path << RESET << std::endl;
+    } else if (req.method == "GET") {
         handle_get_requst(req, client_fd, data);
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " "  << req.method << " " << req.path << RESET << std::endl;   
+    }
     else if (req.method == "DELETE")
         handle_delete_request(req, client_fd, data);
     else
@@ -377,5 +379,6 @@ void clear_httprequest(HttpRequest & req) {
     req.headers.clear();
     req.full_body.clear();
 }
+
 
 Server::~Server() {}
