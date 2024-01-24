@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/24 15:45:39 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/24 17:32:38 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,9 +43,11 @@ int Server::setup_server(const t_config & data,struct sockaddr_in & address) {
     return server_fd;
 }
 
-void Server::serve(const t_config & data) {
+void Server::serve(std::vector<t_config> http_config) {
     int server_fd;
 
+    //doing this for one tcp port (one server ) but chould remove it on the future incase of multiple servers incha2lah
+    const t_config & data = http_config[0];
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);

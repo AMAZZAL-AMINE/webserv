@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/24 15:24:00 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/24 17:31:33 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ class Server {
     std::string timeout;
   public : 
     Server(const t_config & data);
-    void serve(const t_config & data);
+    void serve(std::vector<t_config> http_config);
     void handle_post_requst(HttpRequest &, const t_config &);
     void handle_get_requst(HttpRequest &, int &, const t_config &);
     int setup_server(const t_config & data,struct sockaddr_in & address);

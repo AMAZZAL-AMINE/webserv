@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:44:16 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/24 15:27:35 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/24 17:30:46 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ int main(int argc, char __unused **argv) {
     sttp_pars.parsConfigFile(argv[1]);
     std::vector<t_config> http_config = sttp_pars.getConfig();
     Server server(http_config.at(0));
-    server.serve(http_config.at(0));
+    server.serve(http_config);
   } catch (std::exception & e) {
     std::cout << e.what() << std::endl;
   }
