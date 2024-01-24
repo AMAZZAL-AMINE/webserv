@@ -6,13 +6,13 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/24 15:35:25 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/24 15:45:39 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../main.h"
 
-std::string get_response_message(std::string fhtml, const t_config & data) {
+std::string read_html_file(std::string fhtml, const t_config & data) {
     fhtml = data.root + "/" + fhtml;
     char resolvedPath[PATH_MAX];
     realpath(fhtml.c_str(), resolvedPath);
@@ -25,15 +25,8 @@ std::string get_response_message(std::string fhtml, const t_config & data) {
     return buffer.str();
 }
 
-char *current_date() {
-    time_t now = time(0);
-    char *dt = std::ctime(&now);
-    dt[strlen(dt) - 1] = '\0';
-    return dt;
-}
-
 Server::Server(const t_config & data) {
-    std::string htmlData = get_response_message("index.html", data);
+    std::string htmlData = read_html_file("index.html", data);
     this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
 }
 int Server::setup_server(const t_config & data,struct sockaddr_in & address) {
@@ -48,54 +41,6 @@ int Server::setup_server(const t_config & data,struct sockaddr_in & address) {
     bind(server_fd, (struct sockaddr *)&address, sizeof(address));
     listen(server_fd, 20);
     return server_fd;
-}
-
-void response_errors(int client_fd, int code, const t_config & data) {
-    std::string htmlData = "";
-    std::string res_status = "";
-    switch(code) {
-        case 404 :
-            htmlData = get_response_message(data.error404, data);
-            res_status = "404 Not Found";   
-            break;
-        case 500 :
-            htmlData = get_response_message(data.error500, data);
-            res_status = "500 Internal Server Error";
-            break;
-        case 400 :
-            htmlData = get_response_message(data.error400, data);
-            res_status = "400 Bad Request";
-            break;
-        case 408 :
-            htmlData = get_response_message(data.error408, data);
-            res_status = "408 Request Timeout";
-            break;
-        case 413 :
-            htmlData = get_response_message(data.error413, data);
-            res_status = "413 Payload Too Large";
-            break;
-        case 403 :
-            htmlData = get_response_message(data.error403, data);
-            res_status = "403 Forbidden";
-            break;
-        case  405 :
-            htmlData = get_response_message(data.error405, data);
-            res_status = "405 Method Not Allowed";
-            break;
-        case 501 :
-            htmlData = get_response_message(data.error501, data);
-            res_status = "501 Not Implemented";
-            break;
-        case 409 :
-            htmlData = get_response_message(data.error409, data);
-            res_status = "409 Conflict";
-            break;
-        default :
-            break;
-    }
-    std::string httpResq = "HTTP/1.1 " + res_status + "\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
-    send(client_fd, httpResq.c_str(), httpResq.length(), 0);
-    std::cout << RED << "[RESPONSE - " << current_date() << "] " <<  BG_WHITE << BLACK << res_status << RESET << std::endl;
 }
 
 void Server::serve(const t_config & data) {
