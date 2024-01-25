@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/24 17:32:38 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/25 15:20:04 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -239,6 +239,19 @@ void directory_response(HttpRequest & req, int & client_fd, const t_config & dat
     send(client_fd, httpRes.c_str(), httpRes.length(), 0);
 }
 
+std::vector<std::string> split_string(std::string s, std::string delimiter) {
+    std::vector<std::string> extensions;
+    size_t pos = 0;
+    std::string token;
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+        token = s.substr(0, pos);
+        extensions.push_back(token);
+        s.erase(0, pos + delimiter.length());
+    }
+    extensions.push_back(s);
+    return extensions;
+}
+
 void file_response(HttpRequest & __unused req, int & client_fd, const t_config & __unused data, char * resolvedPath) {
     std::ifstream file(resolvedPath, std::ios::binary);
 
@@ -246,14 +259,8 @@ void file_response(HttpRequest & __unused req, int & client_fd, const t_config &
         response_errors(client_fd, 404, data);
         return;
     }
-
     //file size
     file.seekg(0, std::ios::end);
-    //check if file size is bigger than 10MB
-    if (file.tellg() > 10000000) {
-        response_errors(client_fd, 413, data);
-        return;
-    }
     std::streamsize fileSize = file.tellg();
     file.seekg(0, std::ios::beg);
 
@@ -264,16 +271,16 @@ void file_response(HttpRequest & __unused req, int & client_fd, const t_config &
     size_t dotPos = extension.find_last_of('.');
     if (dotPos != std::string::npos)
         extension = extension.substr(dotPos + 1);
-
-    std::string contentType;
-    if (extension == "html")
-        contentType = "text/html";
-    else if (extension == "jpg" || extension == "jpeg")
-        contentType = "image/jpeg";
-    else if (extension == "png")
-        contentType = "image/png";
-    else
-        contentType = "application/octet-stream";
+    std::vector<std::string> content_types = split_string(req.headers["Accept"], ",");
+    std::string contentType = "";
+    for (size_t i = 0; i < content_types.size(); i++) {
+        if (content_types[i].find(extension) != std::string::npos) {
+            contentType = content_types[i];
+            break;
+        }
+    }
+    if (contentType.empty())
+        contentType = "text/plain";
     std::ostringstream httpRes;
         httpRes << "HTTP/1.1 200 OK\n"
         << "Content-Type: " << contentType << "\n"
