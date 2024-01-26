@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/24 15:45:54 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/26 17:12:13 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,7 @@
 #include <sys/select.h>
 #include "./cgi/cgi.hpp"
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <dirent.h>
 
 
