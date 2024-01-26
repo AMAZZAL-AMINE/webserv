@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/26 19:12:35 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/26 19:52:51 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ void Server::serve(std::vector<t_config> http_config) {
         server_fds.push_back(server_fd_);
         server_config[server_fd_] = http_config[i];
         std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] " << RESET << http_config[i].host_name << ":" << http_config[i].port << std::endl;
-        listen(server_fd_, 3);
+        listen(server_fd_, BACKLOG);
     }
     // server_fd = setup_server(data, address);
     fd_set fds;
