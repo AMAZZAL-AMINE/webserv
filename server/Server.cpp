@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/26 19:52:51 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/28 17:48:14 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ int Server::setup_server(const t_config & data,struct sockaddr_in & address) {
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(data.port);
     bind(server_fd, (struct sockaddr *)&address, sizeof(address));
-    // listen(server_fd, 20);
+    listen(server_fd, BACKLOG);
     return server_fd;
 }
 
@@ -53,68 +53,71 @@ void Server::serve(std::vector<t_config> http_config) {
         server_fds.push_back(server_fd_);
         server_config[server_fd_] = http_config[i];
         std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] " << RESET << http_config[i].host_name << ":" << http_config[i].port << std::endl;
-        listen(server_fd_, BACKLOG);
     }
     // server_fd = setup_server(data, address);
     fd_set fds;
     timeval timeout;
-    timeout.tv_sec = 15;
-    timeout.tv_usec = 0;
     signal(SIGPIPE, SIG_IGN);
     for (;;) {
+        timeout.tv_sec = 15;
+        timeout.tv_usec = 0;
         FD_ZERO(&fds);
         for (size_t i = 0; i < server_fds.size(); i++)
             FD_SET(server_fds[i], &fds);
         int max_fd = *std::max_element(server_fds.begin(), server_fds.end());
         int ret = select(max_fd + 1, &fds, NULL, NULL, &timeout);
         for (size_t i = 0; i < server_fds.size(); i++) {
-            if (FD_ISSET(server_fds[i], &fds)) {
-                struct sockaddr_in address;
-                socklen_t addrlen = sizeof(address);
-                int client_fd = accept(server_fds[i], (struct sockaddr *)&address, &addrlen);
-                if (ret == 0) {
-                    response_errors(client_fd, 408, server_config[server_fds[i]]);
-                    continue;
-                } else if (ret < 0) {
+            if (!FD_ISSET(server_fds[i], &fds))
+                continue;
+            struct sockaddr_in address;
+            socklen_t addrlen = sizeof(address);
+            int client_fd = accept(server_fds[i], (struct sockaddr *)&address, &addrlen);
+            if (ret == 0) {
+                response_errors(client_fd, 408, server_config[server_fds[i]]);
+                continue;
+            } else if (ret < 0) {
+                response_errors(client_fd, 500, server_config[server_fds[i]]);
+                continue;
+            }
+            else {
+                char buffer[3000];
+                ssize_t valread = recv(client_fd, buffer, sizeof(buffer), 0);
+                if (valread <= 0) {
                     response_errors(client_fd, 500, server_config[server_fds[i]]);
                     continue;
                 }
                 else {
-                    char buffer[3000];
-                    ssize_t valread = recv(client_fd, buffer, sizeof(buffer), 0);
-                    if (valread <= 0)
-                        response_errors(client_fd, 500, server_config[server_fds[i]]);
-                    else {
-                        std::string requestBody(buffer, valread);
-                        HttpRequest req = parseHttpRequest(requestBody, server_config[server_fds[i]]);
-                        if (!req.is_valid) {
-                            response_errors(client_fd, req.ifnotvalid_code_status, server_config[server_fds[i]]);
-                            break;
-                        }
-                        int reded_value = req.content_length;
-                        if (req.method == "POST") {
-                            while (1) {
-                                int content_length = req.content_length;
-                                if (reded_value >= content_length && req.if_post_form_type != FORM_DATA)
+                    buffer[valread] = '\0';
+                    std::string requestBody(buffer, valread);
+                    HttpRequest req = parseHttpRequest(requestBody, server_config[server_fds[i]]);
+                    if (!req.is_valid) {
+                        response_errors(client_fd, req.ifnotvalid_code_status, server_config[server_fds[i]]);
+                        break;
+                    }
+                    int reded_value = req.content_length;
+                    if (req.method == "POST") {
+                        while (1) {
+                            int content_length = req.content_length;
+                            if (reded_value >= content_length && req.if_post_form_type != FORM_DATA)
+                                break;
+                            valread = recv(client_fd, buffer, sizeof(buffer), 0);
+                            reded_value += valread;
+                            if (valread <= 0)
+                                response_errors(client_fd, 500, server_config[server_fds[i]]);
+                            else {
+                                std::string newBuffer(buffer, valread);
+                                requestBody += newBuffer;
+                                std::string gg(buffer, valread);
+                                if (reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
                                     break;
-                                valread = recv(client_fd, buffer, sizeof(buffer), 0);
-                                reded_value += valread;
-                                if (valread <= 0)
-                                    response_errors(client_fd, 500, server_config[server_fds[i]]);
-                                else {
-                                    std::string newBuffer(buffer, valread);
-                                    requestBody += newBuffer;
-                                    std::string gg(buffer, valread);
-                                    if (reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
-                                        break;
-                                }
                             }
                         }
-                        req = parseHttpRequest(requestBody, server_config[server_fds[i]]);
-                        handle_request(req, client_fd, server_config[server_fds[i]]);
-                        close(client_fd);
                     }
+                    req = parseHttpRequest(requestBody, server_config[server_fds[i]]);
+                    handle_request(req, client_fd, server_config[server_fds[i]]);
                 }
+                if (close(client_fd) < 0)
+                    response_errors(client_fd, 500, server_config[server_fds[i]]);
             }
         }
     }
