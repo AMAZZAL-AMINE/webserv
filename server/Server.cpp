@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/28 17:48:14 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/31 17:58:18 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,13 +200,13 @@ void handle_delete_request(HttpRequest & __unused req, int & __unused client_fd,
     }
 }
 
-void save_file(HttpRequest & req, const t_config & __unused data) {
-    std::string path = data.root + "/uploads/" +  req.file_name[0];
+void save_file(HttpRequest & req, const t_config & __unused data, size_t & index) {
+    std::string path = data.root + "/uploads/" +  req.file_name[index];
     std::ofstream ofs;
     ofs.open(path, std::ofstream::out | std::ofstream::trunc);
     if (!ofs)
         throw std::runtime_error("Could not open file for writing");
-    ofs << req.form_data[0];
+    ofs << req.form_data[index];
     std::cout << YELLOW << "[FILE SAVED - " << current_date() << "] " << RESET << path << std::endl;
     ofs.close();
 }
@@ -214,10 +214,9 @@ void save_file(HttpRequest & req, const t_config & __unused data) {
 void Server::handle_post_requst(HttpRequest &  req, const t_config & data) {
     for (size_t i = 0; i < req.form_data.size(); i++) {
        if (req.content_type[i] == "file_upload")
-            save_file(req, data);
-        else {
+            save_file(req, data, i);
+        else
             std::cout << req.content_names[i] << " : " << req.form_data[i] << std::endl;
-        }
     }
 }
 

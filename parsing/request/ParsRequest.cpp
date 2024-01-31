@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/25 13:39:25 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/01/31 16:29:03 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,6 +149,7 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
   std::getline(stream, line);
   if (!stream)
     return;
+  int i = 0;
   while (line.find(httpRequest.boundary_start) == SIZE_T_MAX)
     std::getline(stream, line);
   std::string form_data;
@@ -171,10 +172,14 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
       httpRequest.form_data.push_back(line);
       line = "";
       form_data = "";
+      i = 0;
     }
     else {
-      if (form_data != "\r")
+      if (i == 0)
+        i++;
+      else
         line += form_data + "\n";
+      // if (form_data != "\r")
     }
   }
 }
@@ -394,7 +399,6 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config &  __un
     return httpRequest;
   }
   if (httpRequest.method == "POST") {
-    httpRequest.full_body = request.substr(request.find("\r\n\r\n") + 4);
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
       split_chunked_body(stream, httpRequest);
@@ -409,6 +413,7 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config &  __un
     httpRequest.has_query = false;
     httpRequest.has_body = true;
     httpRequest.is_ency_upl_file = true;
+    httpRequest.full_body = request.substr(request.find("\r\n\r\n") + 4);
   }
   else {
     httpRequest.has_body = false;
