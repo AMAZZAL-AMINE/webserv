@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/02 16:24:27 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/02 17:27:10 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,8 +81,7 @@ void Server::serve(std::vector<t_config> http_config) {
             }
             else {
                 request_(client_fd, server_config[server_fds[i]]);
-                if (close(client_fd) < 0)
-                    response_errors(client_fd, 500, server_config[server_fds[i]]);
+                close(client_fd);
             }
         }
     }
