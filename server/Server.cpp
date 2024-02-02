@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/31 17:58:18 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/02 16:24:27 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,42 +80,7 @@ void Server::serve(std::vector<t_config> http_config) {
                 continue;
             }
             else {
-                char buffer[3000];
-                ssize_t valread = recv(client_fd, buffer, sizeof(buffer), 0);
-                if (valread <= 0) {
-                    response_errors(client_fd, 500, server_config[server_fds[i]]);
-                    continue;
-                }
-                else {
-                    buffer[valread] = '\0';
-                    std::string requestBody(buffer, valread);
-                    HttpRequest req = parseHttpRequest(requestBody, server_config[server_fds[i]]);
-                    if (!req.is_valid) {
-                        response_errors(client_fd, req.ifnotvalid_code_status, server_config[server_fds[i]]);
-                        break;
-                    }
-                    int reded_value = req.content_length;
-                    if (req.method == "POST") {
-                        while (1) {
-                            int content_length = req.content_length;
-                            if (reded_value >= content_length && req.if_post_form_type != FORM_DATA)
-                                break;
-                            valread = recv(client_fd, buffer, sizeof(buffer), 0);
-                            reded_value += valread;
-                            if (valread <= 0)
-                                response_errors(client_fd, 500, server_config[server_fds[i]]);
-                            else {
-                                std::string newBuffer(buffer, valread);
-                                requestBody += newBuffer;
-                                std::string gg(buffer, valread);
-                                if (reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
-                                    break;
-                            }
-                        }
-                    }
-                    req = parseHttpRequest(requestBody, server_config[server_fds[i]]);
-                    handle_request(req, client_fd, server_config[server_fds[i]]);
-                }
+                request_(client_fd, server_config[server_fds[i]]);
                 if (close(client_fd) < 0)
                     response_errors(client_fd, 500, server_config[server_fds[i]]);
             }
@@ -123,6 +88,45 @@ void Server::serve(std::vector<t_config> http_config) {
     }
     for (size_t i = 0; i < server_fds.size(); i++)
         close(server_fds[i]);
+}
+
+void Server::request_(int & client_fd, const t_config & data) {
+    char buffer[3000];
+    ssize_t valread = recv(client_fd, buffer, sizeof(buffer) -1, 0);
+    if (valread <= 0) {
+        response_errors(client_fd, 500, data);
+        return;
+    }
+    else {
+        buffer[valread] = '\0';
+        std::string requestBody(buffer, valread);
+        HttpRequest req = parseHttpRequest(requestBody, data);
+        if (!req.is_valid) {
+            response_errors(client_fd, req.ifnotvalid_code_status, data);
+            return;
+        }
+        int reded_value = req.content_length;
+        if (req.method == "POST") {
+            while (1) {
+                int content_length = req.content_length;
+                if (reded_value >= content_length && req.if_post_form_type != FORM_DATA)
+                    break;
+                valread = recv(client_fd, buffer, sizeof(buffer), 0);
+                reded_value += valread;
+                if (valread <= 0)
+                    response_errors(client_fd, 500, data);
+                else {
+                    std::string newBuffer(buffer, valread);
+                    requestBody += newBuffer;
+                    std::string gg(buffer, valread);
+                    if (reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
+                       break;
+                }
+            }
+        }
+        req = parseHttpRequest(requestBody, data);
+        handle_request(req, client_fd, data);
+    }
 }
 
 int check_file_exist(std::string path) {
