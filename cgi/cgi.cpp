@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/01/21 13:34:34 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/04 11:24:30 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,14 +122,24 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME, std::string CGI)
     }
     return "";
 }
+std::string enum_to_string(E_METHOD method)
+{
+    if (method == GET)
+        return "GET";
+    else if (method == POST)
+        return "POST";
+    else if (method == DELETE)
+        return "DELETE";
+    return "NULL";
+}
 
 std::string  run_cgi(HttpRequest & __unused req,const t_config & data , std::string __unused content_type, std::string script_filename)
 {
-    std::string head = req.method + " " + req.path  + " " + req.version + "\r\n";
+    std::string head = enum_to_string(req.method) + " " + req.path  + " " + req.version + "\r\n";
     std::string SCRIPT_NAME = script_filename; //"./cgi/cgi.php";
     std::string SCRIPT_FILENAME = script_filename; //"./cgi/cgi.php";
     std::string CONTENT_TYPE = req.headers["Content-Type"];
-    std::string REQUEST_METHOD = req.method;
+    std::string REQUEST_METHOD = enum_to_string(req.method);
     std::string CONTENT_LENGTH = _itos_(req.full_body.length());
     std::string QUERY_STRING = req.has_query ? req.query : "test=1";
     std::string SERVER_PROTOCOL = req.version;

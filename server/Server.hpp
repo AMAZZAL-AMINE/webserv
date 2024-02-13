@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/02 16:00:20 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/12 15:34:35 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,33 @@
 #define FORM_DATA 201
 #define TEXT_PLAIN 202
 
+enum E_METHOD
+{
+  GET,
+  POST,
+  DELETE,
+  NULL_METHOD
+};
+
+// enum E_FORM
+// {
+//   TEXT_PLAIN,
+//   DEFAULT_FORM,
+//   FORM_DATA,
+//   NULL_FORM
+// };
+
+typedef struct t_response {
+  long get_methdo_file_size;
+  long readed_bayt_;
+  bool is_header_sent;
+  bool is_finished_responsed;
+  int  fd;
+  std::string readed_str;
+} httpResponse;
+
 typedef struct HttpRequest {
-  std::string method;
+  E_METHOD method;
   std::string path;
   std::string version;
   bool is_valid;
@@ -41,6 +66,7 @@ typedef struct HttpRequest {
   std::map<std::string, std::string> headers;
   std::string query;
   std::string full_body;
+  httpResponse response;
 } HttpRequest;
 
 class Server {

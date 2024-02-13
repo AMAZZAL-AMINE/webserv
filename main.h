@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/26 19:52:43 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/11 16:29:54 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,10 @@
 
 
 #define TIME_OUT 1000
-#define BACKLOG 10
+#define BACKLOG 20
+// #define MAX_CLIENTS 100
+#define BUFFER_SIZE 3000
+#define BUFFER_SIZE_BIG 4096
 
 
 int _atoi_(std::string  str);
@@ -65,6 +68,7 @@ void handle_delete_request(HttpRequest & __unused req, int & __unused client_fd,
 std::string _itos_(int n);
 void response_errors(int client_fd, int code, const t_config & data);
 std::string read_html_file(std::string fhtml, const t_config & data);
+std::string enum_to_string(E_METHOD method);
 bool isDirectory(const char* path);
 char *current_date();
 #endif

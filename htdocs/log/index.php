@@ -1,3 +1,4 @@
 <?php 
-  var_dump($HTTP_RAW_POST_DATA);
+  $name = $_POST['name'];
+  echo "Hello, $name!";
 ?>

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/02 17:27:10 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/13 17:05:44 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,18 @@ Server::Server(const t_config & data) {
     this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
 }
 
+void set_nonblock(int socket) {
+    int flags = fcntl(socket, F_GETFL);
+    flags |= O_NONBLOCK;
+    fcntl(socket, F_SETFL, flags);
+}
+
 int Server::setup_server(const t_config & data,struct sockaddr_in & address) {
     int server_fd;
     int opt = 1;
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    set_nonblock(server_fd);
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
@@ -44,89 +51,130 @@ int Server::setup_server(const t_config & data,struct sockaddr_in & address) {
     return server_fd;
 }
 
+
+bool is_server_fd(int fd, int server_fd) {
+    return fd == server_fd;
+}
+
+typedef struct t_request {
+    std::string request_str;
+    t_config conf;
+    HttpRequest req_parsed_data;
+    int server_fd;
+    int client_fd;
+} t_request;
+
+#include <sys/ioctl.h>
+
 void Server::serve(std::vector<t_config> http_config) {
     std::vector<int> server_fds;
-    std::map<int, t_config> server_config;
-    for (size_t i = 0; i < http_config.size(); i++) {
-        struct sockaddr_in address;
-        int server_fd_ = setup_server(http_config[i], address);
-        server_fds.push_back(server_fd_);
-        server_config[server_fd_] = http_config[i];
-        std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] " << RESET << http_config[i].host_name << ":" << http_config[i].port << std::endl;
+    std::map<int, t_request> server_config;
+    std::map<int, t_config> configs;
+    struct sockaddr_in address;
+    socklen_t addresslen = sizeof(address);
+    for (size_t i = 0; i != http_config.size(); i++) {
+        int fd = setup_server(http_config[i], address);
+        server_fds.push_back(fd);
+        configs[fd] = http_config[i];
     }
-    // server_fd = setup_server(data, address);
-    fd_set fds;
+    int server_fd_ = setup_server(http_config[0], address);
+    std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] " << RESET << http_config[0].host_name << ":" << http_config[0].port << std::endl;
     timeval timeout;
-    signal(SIGPIPE, SIG_IGN);
-    for (;;) {
-        timeout.tv_sec = 15;
-        timeout.tv_usec = 0;
-        FD_ZERO(&fds);
-        for (size_t i = 0; i < server_fds.size(); i++)
-            FD_SET(server_fds[i], &fds);
-        int max_fd = *std::max_element(server_fds.begin(), server_fds.end());
-        int ret = select(max_fd + 1, &fds, NULL, NULL, &timeout);
-        for (size_t i = 0; i < server_fds.size(); i++) {
-            if (!FD_ISSET(server_fds[i], &fds))
-                continue;
-            struct sockaddr_in address;
-            socklen_t addrlen = sizeof(address);
-            int client_fd = accept(server_fds[i], (struct sockaddr *)&address, &addrlen);
-            if (ret == 0) {
-                response_errors(client_fd, 408, server_config[server_fds[i]]);
-                continue;
-            } else if (ret < 0) {
-                response_errors(client_fd, 500, server_config[server_fds[i]]);
-                continue;
+    std::vector<int> client_sockets;
+    int max_fd = server_fd_ + 1;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    const int MAX_CLIENTS = 200;
+    int client_socket[MAX_CLIENTS];
+    for (int i = 0; i < MAX_CLIENTS; i++)
+        client_socket[i] = 0;
+    int new_socket;
+    while (true) {
+        signal(SIGPIPE, SIG_IGN);
+        fd_set read_fds, write_fds;
+        FD_ZERO(&read_fds);
+        FD_ZERO(&write_fds);
+        for (size_t i = 0; i != server_fds.size(); i++) {
+            server_fd_ = server_fds[i];
+            FD_SET(server_fd_, &read_fds);
+        }
+        int activity = select(max_fd + 1, &read_fds, &write_fds, nullptr, &timeout);
+        for (int i = 0; i < MAX_CLIENTS; i++) {
+            if (client_socket[i] > 0) {
+                FD_SET(client_socket[i], &read_fds);
+                if (client_socket[i] > max_fd)
+                    max_fd = client_socket[i];
             }
-            else {
-                request_(client_fd, server_config[server_fds[i]]);
-                close(client_fd);
+        }
+        if (activity < 0) {
+            perror("select");
+            exit(EXIT_FAILURE);
+        }
+        for(size_t i = 0; i != server_fds.size(); i++) {
+            server_fd_ = server_fds[i];
+            if (FD_ISSET(server_fd_, &read_fds)) {
+                new_socket = accept(server_fd_, (struct sockaddr *)&address, &addresslen);
+                if (new_socket < 0) {
+                    perror("accept");
+                    exit(EXIT_FAILURE);
+                }
+                for (int i = 0; i < MAX_CLIENTS; i++) {
+                    if (client_socket[i] == 0) {
+                        client_socket[i] = new_socket;
+                        server_config[new_socket].server_fd = server_fd_;
+                        server_config[new_socket].conf = configs[server_fd_];
+                        if (client_socket[i] > max_fd)
+                            max_fd = client_socket[i];
+                        break;
+                    }
+                }
+        }
+        }
+        // Check each client socket for data to read
+        for (int i = 0; i < MAX_CLIENTS; ++i) {
+            int sd = client_socket[i];
+            if (FD_ISSET(sd, &read_fds) && sd != server_fd_) {
+                char buffer[BUFFER_SIZE] = {0};
+                int valread = recv(sd, buffer, sizeof(buffer) - 1, 0);
+                if (valread == 0) {
+                    close(sd);
+                    client_socket[i] = 0;
+                }else if (valread > 0) {
+                    buffer[valread] = '\0';
+                    std::string str(buffer, valread);
+                    FD_SET(client_socket[i], &write_fds);
+                    server_config[sd].request_str += str;
+                }
+            }
+            if (FD_ISSET(sd, &write_fds) && sd != server_fd_) {
+                server_config[sd].req_parsed_data = parseHttpRequest(server_config[sd].request_str, server_config[sd].conf);
+                if (server_config[sd].req_parsed_data.method == POST) {
+                    if (server_config[sd].req_parsed_data.content_length > static_cast<int>(server_config[sd].req_parsed_data.full_body.length())) {
+                        FD_CLR(sd, &write_fds);
+                        continue;
+                    }
+                }
+                handle_request(server_config[sd].req_parsed_data, sd, server_config[sd].conf);
+                close(sd);
+                client_socket[i] = 0;
+                clear_httprequest(server_config[sd].req_parsed_data);
+                server_config[sd].request_str = "";
+                FD_CLR(sd, &write_fds);
+                FD_CLR(sd, &read_fds);
+                server_config.erase(sd);
             }
         }
     }
+    close(server_fd_);
     for (size_t i = 0; i < server_fds.size(); i++)
         close(server_fds[i]);
 }
 
-void Server::request_(int & client_fd, const t_config & data) {
-    char buffer[3000];
-    ssize_t valread = recv(client_fd, buffer, sizeof(buffer) -1, 0);
-    if (valread <= 0) {
-        response_errors(client_fd, 500, data);
-        return;
-    }
-    else {
-        buffer[valread] = '\0';
-        std::string requestBody(buffer, valread);
-        HttpRequest req = parseHttpRequest(requestBody, data);
-        if (!req.is_valid) {
-            response_errors(client_fd, req.ifnotvalid_code_status, data);
-            return;
-        }
-        int reded_value = req.content_length;
-        if (req.method == "POST") {
-            while (1) {
-                int content_length = req.content_length;
-                if (reded_value >= content_length && req.if_post_form_type != FORM_DATA)
-                    break;
-                valread = recv(client_fd, buffer, sizeof(buffer), 0);
-                reded_value += valread;
-                if (valread <= 0)
-                    response_errors(client_fd, 500, data);
-                else {
-                    std::string newBuffer(buffer, valread);
-                    requestBody += newBuffer;
-                    std::string gg(buffer, valread);
-                    if (reded_value >= content_length && requestBody.find(req.boundary_end) != SIZE_T_MAX)
-                       break;
-                }
-            }
-        }
-        req = parseHttpRequest(requestBody, data);
-        handle_request(req, client_fd, data);
-    }
+void Server::request_(int & __unused client_fd, const t_config & __unused data) {
+
 }
+
+void handle_delete_request(HttpRequest & __unused req, int & __unused client_fd, const t_config  & __unused data); 
 
 int check_file_exist(std::string path) {
     //check permission
@@ -138,7 +186,7 @@ int check_file_exist(std::string path) {
 }
 
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
-    if (req.path.find(".php") != SIZE_T_MAX && req.method != "DELETE") {
+    if (req.path.find(".php") != SIZE_T_MAX && req.method != DELETE) {
         std::string path = data.root + req.path;
         if (check_file_exist(path) != 0) {
             response_errors(client_fd, check_file_exist(path), data);
@@ -147,20 +195,18 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
         std::string cgi_path = run_cgi(req, data,std::string("text/html"), path);
         std::cout << path << std::endl;
         send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << "  " << BG_WHITE << req.method << " " << req.path << RESET << std::endl;
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << "  " << BG_WHITE << enum_to_string(req.method) << " " << req.path << RESET << std::endl;
         return;
     }
-    else if (req.method == "POST") {
+    else if (req.method == POST) {
         handle_post_requst(req, data);
-        // std::string cgi_path = run_cgi(req, data, std::string("text/html"), data.root + std::string("/php/post.php"));
-        // send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
         send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " "  << req.method << " " << req.path << RESET << std::endl;
-    } else if (req.method == "GET") {
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " "  << enum_to_string(req.method) << " " << req.path << RESET << std::endl;
+    } else if (req.method == GET) {
         handle_get_requst(req, client_fd, data);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " "  << req.method << " " << req.path << RESET << std::endl;   
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " "  << enum_to_string(req.method) << " " << req.path << RESET << std::endl;   
     }
-    else if (req.method == "DELETE")
+    else if (req.method == DELETE)
         handle_delete_request(req, client_fd, data);
     else
         response_errors(client_fd, 405, data);
@@ -266,21 +312,7 @@ std::vector<std::string> split_string(std::string s, std::string delimiter) {
     return extensions;
 }
 
-void file_response(HttpRequest & __unused req, int & client_fd, const t_config & __unused data, char * resolvedPath) {
-    std::ifstream file(resolvedPath, std::ios::binary);
-
-    if (!file.is_open()) {
-        response_errors(client_fd, 404, data);
-        return;
-    }
-    //file size
-    file.seekg(0, std::ios::end);
-    std::streamsize fileSize = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    std::vector<char> buffer(fileSize);
-    file.read(buffer.data(), fileSize);
-
+std::string get_file_extention(char * resolvedPath, HttpRequest & req) {
     std::string extension = resolvedPath;
     size_t dotPos = extension.find_last_of('.');
     if (dotPos != std::string::npos)
@@ -295,13 +327,28 @@ void file_response(HttpRequest & __unused req, int & client_fd, const t_config &
     }
     if (contentType.empty())
         contentType = "text/plain";
-    std::ostringstream httpRes;
-        httpRes << "HTTP/1.1 200 OK\n"
-        << "Content-Type: " << contentType << "\n"
-        << "Content-Length: " << fileSize << "\n\n";
-
-    send(client_fd, httpRes.str().c_str(), httpRes.str().length(), 0);
-    send(client_fd, buffer.data(), fileSize, 0);
+    return contentType;
+}
+void file_response(HttpRequest &req, int &client_fd, const t_config & __unused data, char *resolvedPath) {
+    int fd = open(resolvedPath, O_RDONLY);
+    if (fd == -1) {
+        response_errors(client_fd, 500, data);
+        return;
+    }
+    std::string contentType = get_file_extention(resolvedPath, req);
+    struct stat stat_buf;
+    fstat(fd, &stat_buf);
+    std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: " + contentType + "\nContent-Length: " + std::to_string(stat_buf.st_size) + "\n\n";
+    send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+    char buffer[BUFFER_SIZE_BIG];
+    int bytes_read;
+    while ((bytes_read = read(fd, buffer, BUFFER_SIZE_BIG)) != 0) {
+        ssize_t bytes_sent = send(client_fd, buffer, bytes_read, 0);
+        if (bytes_sent == -1)
+            break;
+        usleep(1500);
+    }
+    close(fd);
 }
 
 void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
@@ -334,7 +381,7 @@ void Server::handle_get_requst(HttpRequest &  req, int & client_fd, const t_conf
 }
 
 void clear_httprequest(HttpRequest & req) {
-    req.method = "";
+    req.method = NULL_METHOD;
     req.path = "";
     req.version = "";
     req.is_valid = false;

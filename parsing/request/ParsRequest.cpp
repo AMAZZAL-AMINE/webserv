@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/31 16:29:03 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/04 11:19:55 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -376,7 +376,7 @@ void parst_get_query(std::string query, HttpRequest & httpRequest) {
 
 int is_valid_request(HttpRequest & httpRequest) {
   httpRequest.is_valid = false;
-  if (httpRequest.method == "POST") {
+  if (httpRequest.method == POST) {
     std::string content_type = "Transfer-Encoding";
     std::map<std::string, std::string> head = get_header(content_type, httpRequest);
     if (!head.empty() && head[content_type] != "chunked")
@@ -391,14 +391,16 @@ int is_valid_request(HttpRequest & httpRequest) {
 HttpRequest parseHttpRequest(const std::string & request, const t_config &  __unused config) {
   HttpRequest httpRequest;
   std::istringstream stream(request);
-  stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
+  std::string method;
+  stream >> method >> httpRequest.path >> httpRequest.version;
+  httpRequest.method = method == "GET" ? GET : method == "POST" ? POST : DELETE;
   httpRequest.headers = get_headers(stream);
   httpRequest.is_valid = true;
   if (is_valid_request(httpRequest) == -1) {
     std::cout << request << std::endl;
     return httpRequest;
   }
-  if (httpRequest.method == "POST") {
+  if (httpRequest.method == POST) {
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
       split_chunked_body(stream, httpRequest);
