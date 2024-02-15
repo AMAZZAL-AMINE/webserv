@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/04 11:19:55 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/15 15:55:41 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -418,6 +418,7 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config &  __un
     httpRequest.full_body = request.substr(request.find("\r\n\r\n") + 4);
   }
   else {
+    httpRequest.content_length = 0;
     httpRequest.has_body = false;
     httpRequest.is_chunked = false;
     httpRequest.has_query = false;
