@@ -6,7 +6,7 @@
 /*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/01/13 16:14:35 by rouali           ###   ########.fr       */
+/*   Updated: 2024/02/15 15:45:53 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ cgi::~cgi()
     delete[] envp;
 }
 
-std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
+std::string  cgi::fill_env(std::string SCRIPT_FILENAME, std::string CGI)
 {
 
     int status;
@@ -65,15 +65,17 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
         std::cout << "fork error" << std::endl;
         return "";
     }
-    if (!pid)
+    if (pid == 0)
     {
-
-        if (dup2(fd[1], 1) == -1)
+        if (this->env["REQUEST_METHOD"] == "POST")
         {
-            std::cout << "dup2 error" << std::endl;
-            exit(1);
+            if (dup2(fd[0], 0) == -1)
+            {
+                std::cout << "dup2 error" << std::endl;
+                exit(1);
+            }
         }
-        if (dup2(fd[0], 0) == -1)
+        if (dup2(fd[1], 1) == -1)
         {
             std::cout << "dup2 error" << std::endl;
             exit(1);
@@ -82,24 +84,15 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
         close(fd[0]);
         close(fd[1]);
 
-        // char **av = new char *[3];
-        // av[0] = new char[std::strlen(CGI) + 1];
-        // av[1] = new char[std::strlen(SCRIPT_FILENAME.c_str()) + 1];
-        // av[2] = NULL;
-        // std::strcpy(av[0], CGI);
-        // std::strcpy(av[1], SCRIPT_FILENAME.c_str());
-        // if (execve(CGI, av, envp) == -1)
-        // {
-        //     std::cout << "execve error" << std::endl;
-        //     exit(127);
-        // }
-        // exit(0);
-        std::vector<char*> av;
-        av.push_back(strdup(CGI));
-        av.push_back(strdup(SCRIPT_FILENAME.c_str()));
-        av.push_back(0);
-
-        if (execve(CGI, av.data(), envp) == -1) {
+        char **av = new char *[3];
+        av[0] = new char[CGI.length() + 1];
+        av[1] = new char[std::strlen(SCRIPT_FILENAME.c_str()) + 1];
+        av[2] = NULL;
+        std::strcpy(av[0], CGI.c_str());
+        std::strcpy(av[1], SCRIPT_FILENAME.c_str());
+        if (execve(CGI.c_str(), av, envp) == -1)
+        {
+            //print cmd
             std::cout << "execve error" << std::endl;
             exit(127);
         }
@@ -107,13 +100,16 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
     }
     else
     {
+        if (this->env["REQUEST_METHOD"] == "POST")
+        {
+            write(fd[1], body.c_str(), body.length());
+        }
         waitpid(pid, &status, 0);
         if (WEXITSTATUS(status) != 0)
         {
             std::cout << "CGI ERROR" << std::endl;
             return "";
         }
-        write(fd[1], body.c_str(), body.length());
         close(fd[1]);
         char buffer[1024];
         std::string response;
@@ -121,42 +117,60 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME)
         {
             int byte = read(fd[0], buffer, 1023);
             if (byte <= 0)
-            {
                 break;
+            if (byte == 1023)
+                buffer[byte] = '\0';
+            else
+                buffer[byte + 1] = '\0';
+            if (byte >= 0)
+            {
+                buffer[byte] = '\0';
+                response += buffer;
             }
-            buffer[byte] = '\0';
-            response += buffer;
         }
-        close(fd[0]);
         return response;
     }
     return "";
 }
 
-std::string  run_cgi(HttpRequest & __unused req)
+std::string enum_to_string(E_METHOD method)
 {
+    if (method == GET)
+        return "GET";
+    else if (method == POST)
+        return "POST";
+    else if (method == DELETE)
+        return "DELETE";
+    return "NULL";
+}
 
-    std::string head = req.method + " " + req.path  + " " + req.version + "\r\n";
-    std::string SCRIPT_NAME = "cgi.php";
-    std::string SCRIPT_FILENAME = "."+req.path;
-    std::string CONTENT_TYPE = "text/html";
-    std::string REQUEST_METHOD = "GET";
-    std::string CONTENT_LENGTH = "0";
+std::string  run_cgi(HttpRequest & __unused req,const t_config & data , std::string __unused content_type, std::string script_filename)
+{
+    std::string head = enum_to_string(req.method) + " " + req.path  + " " + req.version + "\r\n";
+    std::string SCRIPT_NAME = script_filename; //"./cgi/cgi.php";
+    std::string SCRIPT_FILENAME = script_filename; //"./cgi/cgi.php";
+    std::string CONTENT_TYPE = req.headers["Content-Type"];
+    std::string REQUEST_METHOD = enum_to_string(req.method);
+    std::cout << "full body: " << req.full_body << std::endl;
+    std::cout << "full body length = " << req.full_body.size() << std::endl;
+    std::string CONTENT_LENGTH = _itos_(req.content_length);
+    std::cout << "CONTENT_LENGTH: " << CONTENT_LENGTH << std::endl;
     std::string QUERY_STRING = req.has_query ? req.query : "test=1";
-    std::string SERVER_PROTOCOL = "HTTP/1.1";
+    std::string SERVER_PROTOCOL = req.version;
     std::string SERVER_SOFTWARE = "localhost";
     std::string SERVER_NAME = "localhost";
     std::string GATEWAY_INTERFACE = "CGI/1.1";
     std::string REDIRECT_STATUS = "200";
-
-    cgi my_cgi(head, "", SCRIPT_NAME, SCRIPT_FILENAME, CONTENT_TYPE,
+    cgi my_cgi(head, req.full_body, SCRIPT_NAME, SCRIPT_FILENAME, CONTENT_TYPE,
                REQUEST_METHOD, CONTENT_LENGTH, QUERY_STRING, SERVER_PROTOCOL,
                SERVER_SOFTWARE, SERVER_NAME, GATEWAY_INTERFACE, REDIRECT_STATUS);
 
-    std::string script_excut = my_cgi.fill_env(SCRIPT_FILENAME);
+    std::string script_excut = my_cgi.fill_env(SCRIPT_FILENAME, data.cgi_path);
+    std::cout << "script resutl = " << script_excut << std::endl;
     size_t pos = script_excut.find("\r\n\r\n");
     std::string cgi_headers = script_excut.substr(0, pos);
     script_excut.erase(0, pos + 4);
-    std::string html_res = "HTTP/1.1 200 OK\r\n" + cgi_headers +"\r\nContent-Length: " + std::to_string(script_excut.length()) +  "\r\n\r\n" + script_excut;
+    std::string html_res = "HTTP/1.1 200 OK\r\n"+cgi_headers +"\r\nContent-Length: " + std::to_string(script_excut.length()) +  "\r\n\r\n" + script_excut;
+    std::cout << GREEN << "CGI RESPONSE: " << RESET << std::endl;
     return html_res;
 }

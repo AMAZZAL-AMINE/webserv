@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ParsRequest.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
+/*   Updated: 2024/02/04 11:19:55 by mamazzal         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../main.h"
 
 char hexToChar(const std::string & hex) {
@@ -25,17 +37,6 @@ std::string urlDecode(const std::string& input) {
     return result;
 }
 
-
-bool is_request_valid(const std::string & request) {
-  if (request.find("GET") == SIZE_T_MAX && request.find("POST") == SIZE_T_MAX)
-    return false;
-  if (request.find("HTTP/1.1") == SIZE_T_MAX)
-    return false;
-  if (request.find("Host") == SIZE_T_MAX)
-    return false;
-  return true;
-}
-
 std::map<std::string, std::string> get_header(std::string & key, HttpRequest & httpRequest) {
   for (std::map<std::string, std::string>::iterator it = httpRequest.headers.begin(); it != httpRequest.headers.end(); it++) {
     if (it->first == key)
@@ -51,14 +52,14 @@ void get_body(std::istringstream & stream, HttpRequest & httpRequest) {
     while (std::getline(stream, body)) {
       if (body == "\r")
         break;
-      httpRequest.body+= body;
+      httpRequest.full_body+= body;
     }
   }else {
     while (std::getline(stream, body)) {
-      httpRequest.body += body + "\n";
+      httpRequest.full_body += body + "\n";
     }
   }
-  if (httpRequest.body.size() == 0)
+  if (httpRequest.full_body.size() == 0)
     httpRequest.has_body = false;
   else
     httpRequest.has_body = true;
@@ -86,11 +87,9 @@ std::string get_boundary_value(const std::string & request) {
 
 void pars_post_request(std::istringstream & stream, HttpRequest & __unused httpRequest) {
   std::string line;
-  std::cout << "POST REQUEST" << std::endl;
   std::getline(stream, line);
   int conut = 0;
   while (1)  {
-    std::cout << line << std::endl;
     std::getline(stream, line);
     if (line.find("boundary=-----") != SIZE_T_MAX && conut != 0)
       break;
@@ -145,12 +144,12 @@ std::string get_name(std::string & line) {
   return name;
 }
 
-
 void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istringstream & stream) {
   std::string line;
   std::getline(stream, line);
   if (!stream)
     return;
+  int i = 0;
   while (line.find(httpRequest.boundary_start) == SIZE_T_MAX)
     std::getline(stream, line);
   std::string form_data;
@@ -173,10 +172,14 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
       httpRequest.form_data.push_back(line);
       line = "";
       form_data = "";
+      i = 0;
     }
     else {
-      if (form_data != "\r")
+      if (i == 0)
+        i++;
+      else
         line += form_data + "\n";
+      // if (form_data != "\r")
     }
   }
 }
@@ -371,19 +374,33 @@ void parst_get_query(std::string query, HttpRequest & httpRequest) {
   }
 }
 
-HttpRequest parseHttpRequest(const std::string & request) {
-  HttpRequest httpRequest;
+int is_valid_request(HttpRequest & httpRequest) {
+  httpRequest.is_valid = false;
+  if (httpRequest.method == POST) {
+    std::string content_type = "Transfer-Encoding";
+    std::map<std::string, std::string> head = get_header(content_type, httpRequest);
+    if (!head.empty() && head[content_type] != "chunked")
+      return (httpRequest.ifnotvalid_code_status = 501, -1);
+    else if (httpRequest.headers["Transfer-Encoding"].empty()  &&  httpRequest.headers["Content-Length"].empty())
+      return (httpRequest.ifnotvalid_code_status = 400, -1);
+  }
   httpRequest.is_valid = true;
-  if (is_request_valid(request) == false) {
-    httpRequest.is_valid = false;
-    httpRequest.ifnotvalid_code_status = 400;
+  return 1;
+}
+
+HttpRequest parseHttpRequest(const std::string & request, const t_config &  __unused config) {
+  HttpRequest httpRequest;
+  std::istringstream stream(request);
+  std::string method;
+  stream >> method >> httpRequest.path >> httpRequest.version;
+  httpRequest.method = method == "GET" ? GET : method == "POST" ? POST : DELETE;
+  httpRequest.headers = get_headers(stream);
+  httpRequest.is_valid = true;
+  if (is_valid_request(httpRequest) == -1) {
+    std::cout << request << std::endl;
     return httpRequest;
   }
-  std::istringstream stream(request);
-  stream >> httpRequest.method >> httpRequest.path >> httpRequest.version;
-  httpRequest.headers = get_headers(stream);
-  if (httpRequest.method == "POST") {
-    // std::cout << "REQUEST : \n" << request << std::endl;
+  if (httpRequest.method == POST) {
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
       split_chunked_body(stream, httpRequest);
@@ -398,12 +415,15 @@ HttpRequest parseHttpRequest(const std::string & request) {
     httpRequest.has_query = false;
     httpRequest.has_body = true;
     httpRequest.is_ency_upl_file = true;
+    httpRequest.full_body = request.substr(request.find("\r\n\r\n") + 4);
   }
   else {
     httpRequest.has_body = false;
     httpRequest.is_chunked = false;
+    httpRequest.has_query = false;
     if (httpRequest.path.find("?") != SIZE_T_MAX) {
       std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+      httpRequest.query = query;
       parst_get_query(query, httpRequest);
       httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
       httpRequest.has_query = true;

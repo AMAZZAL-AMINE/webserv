@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   atoi.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 19:12:33 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/06 13:17:11 by rouali           ###   ########.fr       */
+/*   Updated: 2024/01/19 18:51:26 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,4 +30,26 @@ int _atoi_(std::string  str)
   result = result * ismis;
 
   return result;
+}
+
+//intger to string
+std::string _itos_(int n)
+{
+  std::string str;
+  bool isNegative = false;
+
+  if (n == 0)
+      return "0";
+  if (n < 0) {
+      isNegative = true;
+      n = -n;
+  }
+  while (n > 0) {
+    str.insert(str.begin(), '0' + (n % 10));
+    n = n / 10;
+  }
+  if (isNegative) {
+      str.insert(str.begin(), '-');
+  }
+  return str;
 }

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/15 17:23:52 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/12 15:34:35 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,37 @@
 #define FORM_DATA 201
 #define TEXT_PLAIN 202
 
+enum E_METHOD
+{
+  GET,
+  POST,
+  DELETE,
+  NULL_METHOD
+};
+
+// enum E_FORM
+// {
+//   TEXT_PLAIN,
+//   DEFAULT_FORM,
+//   FORM_DATA,
+//   NULL_FORM
+// };
+
+typedef struct t_response {
+  long get_methdo_file_size;
+  long readed_bayt_;
+  bool is_header_sent;
+  bool is_finished_responsed;
+  int  fd;
+  std::string readed_str;
+} httpResponse;
+
 typedef struct HttpRequest {
-  std::string method;
+  E_METHOD method;
   std::string path;
   std::string version;
   bool is_valid;
-  bool ifnotvalid_code_status;
+  int ifnotvalid_code_status;
   bool is_chunked;
   int content_length;
   int has_body;
@@ -38,9 +63,10 @@ typedef struct HttpRequest {
   std::string boundary_start;
   std::string boundary_end;
   bool is_ency_upl_file;
-  std::string query;
   std::map<std::string, std::string> headers;
-  std::string body;
+  std::string query;
+  std::string full_body;
+  httpResponse response;
 } HttpRequest;
 
 class Server {
@@ -49,9 +75,13 @@ class Server {
     std::string badRequest;
     std::string timeout;
   public : 
-    Server();
-    void serve(const t_config & data);
-    void handle_post_requst(HttpRequest &);
+    Server(const t_config & data);
+    void serve(std::vector<t_config> http_config);
+    void handle_post_requst(HttpRequest &, const t_config &);
+    void handle_get_requst(HttpRequest &, int &, const t_config &);
+    int setup_server(const t_config & data,struct sockaddr_in & address);
+    void handle_request(HttpRequest & req, int & client_fd, const t_config & data);
+    void request_(int & client_fd, const t_config & data);
     ~Server();
 };
 
