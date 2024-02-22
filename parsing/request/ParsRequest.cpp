@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/15 15:55:41 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/22 16:29:43 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -374,8 +374,14 @@ void parst_get_query(std::string query, HttpRequest & httpRequest) {
   }
 }
 
-int is_valid_request(HttpRequest & httpRequest) {
+int is_valid_request(HttpRequest & httpRequest, const t_config & config) {
   httpRequest.is_valid = false;
+  bool find = false;
+  for (size_t i = 0; i < config.methods.size(); i++)
+    if (config.methods[i] == httpRequest.method)
+      find = true;
+  if (!find)
+    return (httpRequest.ifnotvalid_code_status = 405, -1);
   if (httpRequest.method == POST) {
     std::string content_type = "Transfer-Encoding";
     std::map<std::string, std::string> head = get_header(content_type, httpRequest);
@@ -388,7 +394,7 @@ int is_valid_request(HttpRequest & httpRequest) {
   return 1;
 }
 
-HttpRequest parseHttpRequest(const std::string & request, const t_config &  __unused config) {
+HttpRequest parseHttpRequest(const std::string & request, const t_config & config) {
   HttpRequest httpRequest;
   std::istringstream stream(request);
   std::string method;
@@ -396,10 +402,8 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config &  __un
   httpRequest.method = method == "GET" ? GET : method == "POST" ? POST : DELETE;
   httpRequest.headers = get_headers(stream);
   httpRequest.is_valid = true;
-  if (is_valid_request(httpRequest) == -1) {
-    std::cout << request << std::endl;
+  if (is_valid_request(httpRequest, config) == -1)
     return httpRequest;
-  }
   if (httpRequest.method == POST) {
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;

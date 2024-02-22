@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/11 16:29:54 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/22 16:21:23 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,14 @@
 #define BLACK "\033[30m"
 #define WHITE "\033[37m"
 #define BG_WHITE "\033[47m"
+
+enum E_METHOD
+{
+  GET,
+  POST,
+  DELETE,
+  NULL_METHOD
+};
 
 #include <iostream>
 #include <fstream>
@@ -71,4 +79,6 @@ std::string read_html_file(std::string fhtml, const t_config & data);
 std::string enum_to_string(E_METHOD method);
 bool isDirectory(const char* path);
 char *current_date();
+std::vector<std::string> split_string(std::string s, std::string delimiter);
+void directory_response(HttpRequest & req, int & client_fd, const t_config & data);
 #endif

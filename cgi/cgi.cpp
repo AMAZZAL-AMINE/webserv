@@ -151,8 +151,6 @@ std::string  run_cgi(HttpRequest & __unused req,const t_config & data , std::str
     std::string SCRIPT_FILENAME = script_filename; //"./cgi/cgi.php";
     std::string CONTENT_TYPE = req.headers["Content-Type"];
     std::string REQUEST_METHOD = enum_to_string(req.method);
-    std::cout << "full body: " << req.full_body << std::endl;
-    std::cout << "full body length = " << req.full_body.size() << std::endl;
     std::string CONTENT_LENGTH = _itos_(req.content_length);
     std::cout << "CONTENT_LENGTH: " << CONTENT_LENGTH << std::endl;
     std::string QUERY_STRING = req.has_query ? req.query : "test=1";

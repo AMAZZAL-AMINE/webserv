@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/13 17:05:44 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/22 16:58:02 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,16 +18,16 @@ std::string read_html_file(std::string fhtml, const t_config & data) {
     realpath(fhtml.c_str(), resolvedPath);
     std::fstream file(resolvedPath);
     if (!file.is_open())
-        return "<h1 >ROOT NOT FOUND</h1>";
+        return "<h1 > " + fhtml + " : ROOT NOT FOUND</h1>";
     std::stringstream buffer;
     buffer << file.rdbuf();
     file.close();
     return buffer.str();
 }
 
-Server::Server(const t_config & data) {
-    std::string htmlData = read_html_file("index.html", data);
-    this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
+Server::Server(const t_config __unused & data) {
+    // std::string htmlData = read_html_file("index.html", data);
+    // this->httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(htmlData.length()) + "\n\n" + htmlData + "\n";
 }
 
 void set_nonblock(int socket) {
@@ -148,6 +148,18 @@ void Server::serve(std::vector<t_config> http_config) {
             }
             if (FD_ISSET(sd, &write_fds) && sd != server_fd_) {
                 server_config[sd].req_parsed_data = parseHttpRequest(server_config[sd].request_str, server_config[sd].conf);
+                if (sd != 0 && server_config[sd].req_parsed_data.ifnotvalid_code_status != 0) {
+                    response_errors(sd, server_config[sd].req_parsed_data.ifnotvalid_code_status, server_config[sd].conf);
+                    close(sd);
+                    client_socket[i] = 0;
+                    clear_httprequest(server_config[sd].req_parsed_data);
+                    server_config[sd].request_str = "";
+                    FD_CLR(sd, &write_fds);
+                    FD_CLR(sd, &read_fds);
+                    server_config.erase(sd);
+                    std::cout << server_config[sd].req_parsed_data.ifnotvalid_code_status << std::endl;
+                    continue;
+                }
                 if (server_config[sd].req_parsed_data.method == POST) {
                     if (server_config[sd].req_parsed_data.content_length > static_cast<int>(server_config[sd].req_parsed_data.full_body.length())) {
                         FD_CLR(sd, &write_fds);
@@ -185,31 +197,85 @@ int check_file_exist(std::string path) {
     return 0;
 }
 
+std::string getLocationInPath(std::string path) {
+    std::string location = "";
+    if (path[0] == '/')
+        path.erase(0, 1);
+    for (size_t i = 0; i < path.length(); i++) {
+        if (path[i] == '/')
+            break;
+        location += path[i];
+    }
+    return location;
+}
+
+t_config  exchange_location_to_config(const t_location & location, const t_config & old_data) {
+    t_config  location_config;
+    location_config.root = location.root;
+    location_config.port = old_data.port;
+    location_config.location = location.location;
+    location_config.autoindex = location.autoindex;
+    location_config.cgi_path = location.cgi_path;
+    location_config.error404 = location.error404;
+    location_config.error500 = location.error500;
+    location_config.error408 = location.error408;
+    location_config.error400 = location.error400;
+    location_config.error413 = location.error413;
+    location_config.error403 = location.error403;
+    location_config.error405 = location.error405;
+    location_config.error501 = location.error501;
+    location_config.error409 = location.error409;
+    location_config.max_body_size = location.max_body_size;
+    location_config.index = location.index;
+    location_config.upload_dir = location.upload_dir;
+    location_config.host_name = old_data.host_name;
+    location_config.server_name = location.location.empty() ? old_data.server_name : location.location;
+    return location_config;
+}
+
+t_config change_location(HttpRequest & req, const t_config & data) {
+    std::string location = getLocationInPath(req.path);
+    if (location.empty())
+        return data;
+    for (size_t i = 0; i < data.locations.size(); i++) {
+        if (data.locations[i].location.find(location) != std::string::npos) {
+            t_config location_config = exchange_location_to_config(data.locations[i], data);
+            // remove the root from the path
+            req.path.erase(0, location.length() + 1);
+            if (req.path.empty())
+                req.path = "/";
+            return location_config;
+        }
+    }
+    return data;
+}
+
+
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
+    //check location
+    t_config location_config = change_location(req, data);
     if (req.path.find(".php") != SIZE_T_MAX && req.method != DELETE) {
-        std::string path = data.root + req.path;
+        std::string path = location_config.root + req.path;
         if (check_file_exist(path) != 0) {
-            response_errors(client_fd, check_file_exist(path), data);
+            response_errors(client_fd, check_file_exist(path), location_config);
             return;
         }
-        std::string cgi_path = run_cgi(req, data,std::string("text/html"), path);
-        std::cout << path << std::endl;
+        std::string cgi_path = run_cgi(req, location_config,std::string("text/html"), path);
         send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << "  " << BG_WHITE << enum_to_string(req.method) << " " << req.path << RESET << std::endl;
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << location_config.host_name << ":" << location_config.port << " "  << RESET << "  " << BG_WHITE << enum_to_string(req.method) << " " << req.path << RESET << std::endl;
         return;
     }
     else if (req.method == POST) {
-        handle_post_requst(req, data);
-        send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " "  << enum_to_string(req.method) << " " << req.path << RESET << std::endl;
+        handle_post_requst(req, location_config);
+        directory_response(req, client_fd, location_config);
     } else if (req.method == GET) {
-        handle_get_requst(req, client_fd, data);
-        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << data.host_name << ":" << data.port << " "  << RESET << " "  << enum_to_string(req.method) << " " << req.path << RESET << std::endl;   
+        handle_get_requst(req, client_fd, location_config);
+        std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << location_config.host_name << ":" << location_config.port << " "  << RESET << " "  << enum_to_string(req.method) << " " << req.path << RESET << std::endl;   
     }
     else if (req.method == DELETE)
-        handle_delete_request(req, client_fd, data);
+        handle_delete_request(req, client_fd, location_config);
     else
-        response_errors(client_fd, 405, data);
+        response_errors(client_fd, 405, location_config);
     clear_httprequest(req);
 }
 
@@ -239,7 +305,6 @@ void handle_delete_request(HttpRequest & __unused req, int & __unused client_fd,
         return;
     }
     if (std::remove(path.c_str()) != 0) {
-        std::cout << "PATH : " << path << std::endl;
         response_errors(client_fd, 500, data);
     }
     else {
@@ -250,7 +315,7 @@ void handle_delete_request(HttpRequest & __unused req, int & __unused client_fd,
 }
 
 void save_file(HttpRequest & req, const t_config & __unused data, size_t & index) {
-    std::string path = data.root + "/uploads/" +  req.file_name[index];
+    std::string path = data.root + data.upload_dir +  req.file_name[index];
     std::ofstream ofs;
     ofs.open(path, std::ofstream::out | std::ofstream::trunc);
     if (!ofs)
@@ -284,10 +349,14 @@ void directory_response(HttpRequest & req, int & client_fd, const t_config & dat
     DIR *dir;
     struct dirent *ent;
     if ((dir = opendir(resolvedPath)) != NULL) {
-        htmlData += "<html><head><title>Index of " + req.path + "</title></head><body><h1>Directory : " + req.path + "</h1><hr><pre>";
+        htmlData += "<html><head><title>Index of " + req.path + "</title></head><body><h1>index of : " + req.path + "</h1><hr><pre>";
         while ((ent = readdir(dir)) != NULL) {
-            if (std::string(ent->d_name) != "." && std::string(ent->d_name) != "..")
-                htmlData += "<a href=\"" + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
+            if (std::string(ent->d_name) != "." && std::string(ent->d_name) != "..") {
+                if (data.location.empty())
+                    htmlData += "<a href=\"" + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
+                else
+                    htmlData += "<a href=\"" + data.location  + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
+            }
         }
         htmlData += "</pre>";
         closedir (dir);
@@ -360,8 +429,8 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
         response_errors(client_fd, check_file_exist(resolvedPath), data);
         return;
     } else if (isDirectory(resolvedPath))
-        if (access((std::string(resolvedPath) + "/index.html").c_str(), F_OK) != -1)
-            file_response(req, client_fd, data, (char *)(std::string(resolvedPath) + "/index.html").c_str());
+        if (access((std::string(resolvedPath) + "/" + data.index[0]).c_str(), F_OK) != -1)
+            file_response(req, client_fd, data, (char *)(std::string(resolvedPath) + "/" + data.index[0]).c_str());
         else {
             std::cout << "autoindex : " << data.autoindex << std::endl;
             if (data.autoindex == "off")
@@ -373,9 +442,13 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
         file_response(req, client_fd, data, resolvedPath);
 }
 
+
 void Server::handle_get_requst(HttpRequest &  req, int & client_fd, const t_config & data) {
-    if (req.path == "/" && data.autoindex == "on" && !req.has_query) 
-        send(client_fd, this->httpRes.c_str(), this->httpRes.length(), 0);
+    if (req.path == "/"  && data.autoindex == "on" && !req.has_query) {
+        std::string html = read_html_file(data.index[0], data);
+        std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(html.length()) + "\n\n" + html + "\n";
+        send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+    }
     else if (!req.has_body)
         get_response(req, client_fd, data);
 }

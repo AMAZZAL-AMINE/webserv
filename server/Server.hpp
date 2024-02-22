@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/12 15:34:35 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/22 16:20:04 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,6 @@
 #define DEFAULT_FORM 200
 #define FORM_DATA 201
 #define TEXT_PLAIN 202
-
-enum E_METHOD
-{
-  GET,
-  POST,
-  DELETE,
-  NULL_METHOD
-};
 
 // enum E_FORM
 // {
