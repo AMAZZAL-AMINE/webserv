@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/22 17:24:47 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/25 14:00:45 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,22 @@ void check_methods(std::vector<E_METHOD> methods) {
     if (methods[i] != GET && methods[i] != POST && methods[i] != DELETE)
       throw MethodsException();
   }
+}
+
+t_rederection get_derection(std::string line) {
+  t_rederection rederection;
+  for (size_t i = 0; i < line.length(); i++) {
+    if (line[i] == ' ')
+      break;
+    rederection.old_location += line[i];
+  }
+  for (size_t i = rederection.old_location.length() + 1; i < line.length(); i++) {
+    if (line[i] == ' ')
+      break;
+    rederection.new_location_to_redirect += line[i];
+  }
+  rederection.code = _atoi_(line.substr(rederection.old_location.length() + rederection.new_location_to_redirect.length() + 2));
+  return rederection;
 }
 
 t_location get_location(std::ifstream & file, std::string & line) {
@@ -172,6 +188,12 @@ void Config::parsConfigFile(std::string confFile) {
         else if (line.find("methods") == 2) {
           std::string methods = grepValue(line, "methods");
           s_conf.methods = split_methods(methods);
+        } else if (line.find("redirect") == 2) {
+          std::string methods = grepValue(line, "redirect");
+          s_conf.rederection = get_derection(methods);
+          std::cout << s_conf.rederection.old_location << std::endl;
+          std::cout << s_conf.rederection.new_location_to_redirect << std::endl;
+          std::cout << s_conf.rederection.code << std::endl;
         }
       }
     }

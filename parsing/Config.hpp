@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/26 20:56:18 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/22 16:19:29 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/25 17:39:25 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,12 @@
 #define CONFIG_HPP
 
 #include "../main.h"
+
+typedef struct t_rederection {
+  std::string old_location;
+  std::string new_location_to_redirect;
+  int         code;
+} t_rederection;
 
 typedef struct t_location {
   int      port;
@@ -34,7 +40,10 @@ typedef struct t_location {
   std::vector<std::string> index;
   std::vector<E_METHOD> methods;
   int         max_body_size;
+  t_rederection rederection;
 } t_location;
+
+
 
 typedef struct t_config {
   //config
@@ -60,6 +69,7 @@ typedef struct t_config {
   std::vector<t_location> locations;
   std::vector<E_METHOD> methods;
   std::vector<std::string> index;
+  t_rederection rederection;
 } t_config;
 
 class Config {

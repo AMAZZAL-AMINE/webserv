@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/22 16:58:02 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/25 17:44:03 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -229,6 +229,7 @@ t_config  exchange_location_to_config(const t_location & location, const t_confi
     location_config.index = location.index;
     location_config.upload_dir = location.upload_dir;
     location_config.host_name = old_data.host_name;
+    location_config.rederection = location.rederection;
     location_config.server_name = location.location.empty() ? old_data.server_name : location.location;
     return location_config;
 }
@@ -250,10 +251,20 @@ t_config change_location(HttpRequest & req, const t_config & data) {
     return data;
 }
 
+void check_redirection(HttpRequest & req, int & client_fd, const t_config & data) {
+    // std::cout << "Path : " << req.path << std::endl;
+    // std::cout << "Old Location : " << data.rederection.old_location << std::endl;
+    if (!data.rederection.old_location.empty() && req.path == data.rederection.old_location) {
+        std::string fullLocation = data.host_name + ":" + std::to_string(data.port) + data.rederection.new_location_to_redirect;
+        std::string httpRespionse = "HTTP/1.1 301 Moved Permanently\nLocation: " + data.rederection.new_location_to_redirect + "\n\n";
+        send(client_fd, httpRespionse.c_str(), httpRespionse.length(), 0);
+    }
+}
 
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
     //check location
     t_config location_config = change_location(req, data);
+    check_redirection(req, client_fd, data);
     if (req.path.find(".php") != SIZE_T_MAX && req.method != DELETE) {
         std::string path = location_config.root + req.path;
         if (check_file_exist(path) != 0) {
