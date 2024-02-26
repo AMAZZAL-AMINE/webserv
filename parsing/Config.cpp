@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/25 14:00:45 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/26 13:57:02 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,6 +126,9 @@ t_location get_location(std::ifstream & file, std::string & line) {
       else if (line.find("methods") == 4) {
         std::string methods = grepValue(line, "methods");
         location.methods = split_methods(methods);
+      } else if (line.find("redirect") == 4) {
+          std::string methods = grepValue(line, "redirect");
+          location.rederection = get_derection(methods);
       }
     }
   } 
@@ -191,9 +194,6 @@ void Config::parsConfigFile(std::string confFile) {
         } else if (line.find("redirect") == 2) {
           std::string methods = grepValue(line, "redirect");
           s_conf.rederection = get_derection(methods);
-          std::cout << s_conf.rederection.old_location << std::endl;
-          std::cout << s_conf.rederection.new_location_to_redirect << std::endl;
-          std::cout << s_conf.rederection.code << std::endl;
         }
       }
     }

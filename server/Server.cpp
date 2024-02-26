@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/25 17:44:03 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/26 18:55:19 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -251,20 +251,20 @@ t_config change_location(HttpRequest & req, const t_config & data) {
     return data;
 }
 
-void check_redirection(HttpRequest & req, int & client_fd, const t_config & data) {
-    // std::cout << "Path : " << req.path << std::endl;
-    // std::cout << "Old Location : " << data.rederection.old_location << std::endl;
-    if (!data.rederection.old_location.empty() && req.path == data.rederection.old_location) {
-        std::string fullLocation = data.host_name + ":" + std::to_string(data.port) + data.rederection.new_location_to_redirect;
+bool check_redirection(HttpRequest & req, int & client_fd, const t_config & data) {
+    if (req.path == data.rederection.old_location) {
+        std::string fullLocation = data.host_name + ":" + _itos_(data.port) + data.rederection.new_location_to_redirect;
         std::string httpRespionse = "HTTP/1.1 301 Moved Permanently\nLocation: " + data.rederection.new_location_to_redirect + "\n\n";
         send(client_fd, httpRespionse.c_str(), httpRespionse.length(), 0);
+        return true;
     }
+    return false;
 }
 
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
-    //check location
     t_config location_config = change_location(req, data);
-    check_redirection(req, client_fd, data);
+    if (check_redirection(req, client_fd, location_config))
+        return ;
     if (req.path.find(".php") != SIZE_T_MAX && req.method != DELETE) {
         std::string path = location_config.root + req.path;
         if (check_file_exist(path) != 0) {
@@ -276,6 +276,7 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
         std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << location_config.host_name << ":" << location_config.port << " "  << RESET << "  " << BG_WHITE << enum_to_string(req.method) << " " << req.path << RESET << std::endl;
         return;
     }
+
     else if (req.method == POST) {
         handle_post_requst(req, location_config);
         directory_response(req, client_fd, location_config);
