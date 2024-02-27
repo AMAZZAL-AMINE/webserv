@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/27 12:31:59 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/27 17:53:05 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -412,6 +412,7 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config & confi
   if (httpRequest.method == POST) {
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
+      httpRequest.if_post_form_type = CHUNKED;
       split_chunked_body(stream, httpRequest);
     }else {
       if (httpRequest.path.find("?") != SIZE_T_MAX) {

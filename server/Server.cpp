@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/27 12:49:05 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/27 17:53:26 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -263,6 +263,7 @@ bool check_redirection(HttpRequest & req, int & client_fd, const t_config & data
 
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
     t_config location_config = change_location(req, data);
+    std::cout << "hh \n";
     if (check_redirection(req, client_fd, location_config))
         return ;
     if (req.path.find(".php") != SIZE_T_MAX && req.method != DELETE) {
