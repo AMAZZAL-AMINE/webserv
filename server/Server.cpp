@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/26 18:55:19 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/27 12:49:05 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,10 @@ void Server::serve(std::vector<t_config> http_config) {
         for (int i = 0; i < MAX_CLIENTS; ++i) {
             int sd = client_socket[i];
             if (FD_ISSET(sd, &read_fds) && sd != server_fd_) {
-                char buffer[BUFFER_SIZE] = {0};
+                size_t NEW_BUFFER_SIZE = BUFFER_SIZE;
+                if (server_config[sd].req_parsed_data.method == POST &&  server_config[sd].req_parsed_data.full_body.length() > 0)
+                    NEW_BUFFER_SIZE = server_config[sd].req_parsed_data.content_length - server_config[sd].req_parsed_data.full_body.length() + 1;
+                char buffer[NEW_BUFFER_SIZE];
                 int valread = recv(sd, buffer, sizeof(buffer) - 1, 0);
                 if (valread == 0) {
                     close(sd);
@@ -154,10 +157,7 @@ void Server::serve(std::vector<t_config> http_config) {
                     client_socket[i] = 0;
                     clear_httprequest(server_config[sd].req_parsed_data);
                     server_config[sd].request_str = "";
-                    FD_CLR(sd, &write_fds);
-                    FD_CLR(sd, &read_fds);
                     server_config.erase(sd);
-                    std::cout << server_config[sd].req_parsed_data.ifnotvalid_code_status << std::endl;
                     continue;
                 }
                 if (server_config[sd].req_parsed_data.method == POST) {

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/22 16:29:43 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/27 12:31:59 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -377,10 +377,13 @@ void parst_get_query(std::string query, HttpRequest & httpRequest) {
 int is_valid_request(HttpRequest & httpRequest, const t_config & config) {
   httpRequest.is_valid = false;
   bool find = false;
-  for (size_t i = 0; i < config.methods.size(); i++)
-    if (config.methods[i] == httpRequest.method)
+  for (size_t i = 0; i < config.methods.size(); i++) {
+    if (config.methods[i] == httpRequest.method) {
       find = true;
-  if (!find)
+      break;
+    }
+  }
+  if (find == false)
     return (httpRequest.ifnotvalid_code_status = 405, -1);
   if (httpRequest.method == POST) {
     std::string content_type = "Transfer-Encoding";
@@ -404,6 +407,8 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config & confi
   httpRequest.is_valid = true;
   if (is_valid_request(httpRequest, config) == -1)
     return httpRequest;
+  httpRequest.is_valid = true;
+  httpRequest.ifnotvalid_code_status = 0;
   if (httpRequest.method == POST) {
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
