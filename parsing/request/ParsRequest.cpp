@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/27 17:53:05 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/29 18:47:52 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,9 +177,11 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
     else {
       if (i == 0)
         i++;
-      else
-        line += form_data + "\n";
-      // if (form_data != "\r")
+      else {
+
+        // if (form_data != "\r")
+          line += form_data + "\n";
+      }
     }
   }
 }
@@ -397,6 +399,54 @@ int is_valid_request(HttpRequest & httpRequest, const t_config & config) {
   return 1;
 }
 
+int is_str_hexa_number(const std::string & str) {
+  std::string hexa = "0123456789abcdef";
+  for (size_t i = 0; i < str.size(); i++) {    
+    if (str[i] == '\r' || str[i] == '\n')
+      return 1;
+    for (size_t j = 0; j < hexa.size(); j++) {
+      if (str[i] == hexa[j])
+        break;
+      if (j == hexa.size() - 1)
+        return 0;
+    }
+  }
+  return 1;
+}
+
+bool is_chunked_size(std::string &line) {
+  size_t count = 0;
+  if (line.empty() || line == "0\r")
+    return 0;
+  if (is_str_hexa_number(line) == 0)
+    return 0;
+  if (is_str_hexa_number(line) != 0)
+    return 1;
+  while (count < line.size() && line[count] != '\r') {
+    if (!std::isdigit(line[count]))
+      return 0;
+    count++;
+  }
+  // If valid chunked size format, remove the size information from the string
+  line.erase(0, count);
+  return 1;
+}
+
+std::string turn_chunked_to_normal(const std::string & __unused request, HttpRequest & __unused httpRequest, std::istringstream &stream) {
+  std::string body;
+  std::string line;
+  while (std::getline(stream, line)) {
+    if (line == "\r")
+      continue;
+    if (is_chunked_size(line))
+      line = "";
+    if (line == "0\r")
+      break;
+    body += line + "\n";
+  }
+  return body;
+}
+
 HttpRequest parseHttpRequest(const std::string & request, const t_config & config) {
   HttpRequest httpRequest;
   std::istringstream stream(request);
@@ -410,21 +460,32 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config & confi
   httpRequest.is_valid = true;
   httpRequest.ifnotvalid_code_status = 0;
   if (httpRequest.method == POST) {
+    std::string body = "";
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
-      httpRequest.if_post_form_type = CHUNKED;
-      split_chunked_body(stream, httpRequest);
-    }else {
-      if (httpRequest.path.find("?") != SIZE_T_MAX) {
-        std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
-        pars_post_query(query, httpRequest);
-        httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+      httpRequest.chunked_end = 0;
+      if (request.find("0\r\n") == SIZE_T_MAX) {
+        std::cout << "[1] - returend befor chunked not end\n";
+        return httpRequest;
       }
-      handel_method_post(stream, httpRequest);
+      httpRequest.chunked_end = 1;
+      std::cout << "RE  " << request << "\n";
+      body = turn_chunked_to_normal(request, httpRequest, stream);
+      std::cout << "++++++++++++++++++++++++++++++\n";
+      std::cout << "body \n" << body << "\n";
     }
+    if (httpRequest.path.find("?") != SIZE_T_MAX) {
+      std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+      pars_post_query(query, httpRequest);
+      httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+    }
+    if (httpRequest.is_chunked && !body.empty()) {
+      stream.clear();
+      stream.str(body);
+    }
+    handel_method_post(stream, httpRequest);
     httpRequest.has_query = false;
     httpRequest.has_body = true;
-    httpRequest.is_ency_upl_file = true;
     httpRequest.full_body = request.substr(request.find("\r\n\r\n") + 4);
   }
   else {

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/27 17:53:26 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/02/28 15:50:11 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,7 +160,12 @@ void Server::serve(std::vector<t_config> http_config) {
                     server_config.erase(sd);
                     continue;
                 }
-                if (server_config[sd].req_parsed_data.method == POST) {
+                if (server_config[sd].req_parsed_data.method == POST &&  server_config[sd].req_parsed_data.is_chunked == true) {
+                    if (server_config[sd].req_parsed_data.chunked_end != 1) {
+                        FD_CLR(sd, &write_fds);
+                        continue;
+                    }
+                } else if (server_config[sd].req_parsed_data.method == POST) {
                     if (server_config[sd].req_parsed_data.content_length > static_cast<int>(server_config[sd].req_parsed_data.full_body.length())) {
                         FD_CLR(sd, &write_fds);
                         continue;
@@ -263,7 +268,6 @@ bool check_redirection(HttpRequest & req, int & client_fd, const t_config & data
 
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
     t_config location_config = change_location(req, data);
-    std::cout << "hh \n";
     if (check_redirection(req, client_fd, location_config))
         return ;
     if (req.path.find(".php") != SIZE_T_MAX && req.method != DELETE) {
