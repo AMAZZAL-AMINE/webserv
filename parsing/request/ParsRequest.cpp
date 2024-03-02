@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/29 18:47:52 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/02 13:47:03 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,8 +178,9 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
       if (i == 0)
         i++;
       else {
-
-        // if (form_data != "\r")
+        if (httpRequest.is_chunked && form_data != "\r")
+          line += form_data + "\n";
+        else
           line += form_data + "\n";
       }
     }
@@ -354,7 +355,6 @@ void split_chunked_body(std::istringstream & stream, HttpRequest & __unused http
   }
 }
 
-
 void parst_get_query(std::string query, HttpRequest & httpRequest) {
   std::string key = "";
   std::string value = "";
@@ -416,7 +416,7 @@ int is_str_hexa_number(const std::string & str) {
 
 bool is_chunked_size(std::string &line) {
   size_t count = 0;
-  if (line.empty() || line == "0\r")
+  if (line.empty())
     return 0;
   if (is_str_hexa_number(line) == 0)
     return 0;
@@ -427,8 +427,7 @@ bool is_chunked_size(std::string &line) {
       return 0;
     count++;
   }
-  // If valid chunked size format, remove the size information from the string
-  line.erase(0, count);
+  // line.erase(0, count);
   return 1;
 }
 
@@ -436,12 +435,14 @@ std::string turn_chunked_to_normal(const std::string & __unused request, HttpReq
   std::string body;
   std::string line;
   while (std::getline(stream, line)) {
-    if (line == "\r")
+    // if (line == "\r") {
+    //   std::cout << "HAHAH\n";
+    //   continue;
+    // }
+    if (is_chunked_size(line)) {
+      body += "\r\n";
       continue;
-    if (is_chunked_size(line))
-      line = "";
-    if (line == "0\r")
-      break;
+    }
     body += line + "\n";
   }
   return body;
