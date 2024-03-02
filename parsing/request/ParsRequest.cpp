@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/02 13:47:03 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/02 17:23:54 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -465,15 +465,10 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config & confi
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
       httpRequest.chunked_end = 0;
-      if (request.find("0\r\n") == SIZE_T_MAX) {
-        std::cout << "[1] - returend befor chunked not end\n";
+      if (request.find("0\r\n\r\n") == SIZE_T_MAX)
         return httpRequest;
-      }
       httpRequest.chunked_end = 1;
-      std::cout << "RE  " << request << "\n";
       body = turn_chunked_to_normal(request, httpRequest, stream);
-      std::cout << "++++++++++++++++++++++++++++++\n";
-      std::cout << "body \n" << body << "\n";
     }
     if (httpRequest.path.find("?") != SIZE_T_MAX) {
       std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
