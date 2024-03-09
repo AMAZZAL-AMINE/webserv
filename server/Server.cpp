@@ -18,7 +18,7 @@ std::string read_html_file(std::string fhtml, const t_config & data) {
     realpath(fhtml.c_str(), resolvedPath);
     std::fstream file(resolvedPath);
     if (!file.is_open())
-        return "<h1 > " + fhtml + " : ROOT NOT FOUND</h1>";
+        return "";
     std::stringstream buffer;
     buffer << file.rdbuf();
     file.close();
