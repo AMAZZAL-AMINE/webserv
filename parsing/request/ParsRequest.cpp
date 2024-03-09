@@ -178,9 +178,6 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
       if (i == 0)
         i++;
       else {
-        if (httpRequest.is_chunked && form_data != "\r")
-          line += form_data + "\n";
-        else
           line += form_data + "\n";
       }
     }
@@ -399,53 +396,34 @@ int is_valid_request(HttpRequest & httpRequest, const t_config & config) {
   return 1;
 }
 
-int is_str_hexa_number(const std::string & str) {
-  std::string hexa = "0123456789abcdef";
-  for (size_t i = 0; i < str.size(); i++) {    
-    if (str[i] == '\r' || str[i] == '\n')
-      return 1;
-    for (size_t j = 0; j < hexa.size(); j++) {
-      if (str[i] == hexa[j])
-        break;
-      if (j == hexa.size() - 1)
-        return 0;
-    }
-  }
-  return 1;
-}
 
-bool is_chunked_size(std::string &line) {
-  size_t count = 0;
-  if (line.empty())
-    return 0;
-  if (is_str_hexa_number(line) == 0)
-    return 0;
-  if (is_str_hexa_number(line) != 0)
-    return 1;
-  while (count < line.size() && line[count] != '\r') {
-    if (!std::isdigit(line[count]))
-      return 0;
-    count++;
-  }
-  // line.erase(0, count);
-  return 1;
-}
-
-std::string turn_chunked_to_normal(const std::string & __unused request, HttpRequest & __unused httpRequest, std::istringstream &stream) {
-  std::string body;
-  std::string line;
-  while (std::getline(stream, line)) {
-    // if (line == "\r") {
-    //   std::cout << "HAHAH\n";
-    //   continue;
-    // }
-    if (is_chunked_size(line)) {
-      body += "\r\n";
-      continue;
+std::string turn_chunked_to_normal(std::string request) {
+    std::string body = "";
+    size_t pos = 0;
+    
+    while (pos < request.size()) {
+        size_t chunkSizeEnd = request.find("\r\n", pos);
+        u_long hexa_chunked_size = std::stoul(request.substr(pos, chunkSizeEnd - pos), nullptr, 16);
+        
+        if (hexa_chunked_size == 0) {
+            break;
+        }
+        
+        pos = chunkSizeEnd + 2; // Move past the current chunk size and CRLF
+        
+        std::string chunk = request.substr(pos, hexa_chunked_size);
+        body += chunk;
+        
+        pos += hexa_chunked_size + 2; // Move past the current chunk
+        
+        if (request.substr(pos, 2) == "\r\n") {
+            // Move past the CRLF after the chunk
+            pos += 2;
+        }
     }
-    body += line + "\n";
-  }
-  return body;
+    while (body[body.length() - 2] == '\r' && body[body.length() - 1] == '\n')
+      body.erase(body.length() - 2, 2);
+    return body;
 }
 
 HttpRequest parseHttpRequest(const std::string & request, const t_config & config) {
@@ -468,7 +446,8 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config & confi
       if (request.find("0\r\n\r\n") == SIZE_T_MAX)
         return httpRequest;
       httpRequest.chunked_end = 1;
-      body = turn_chunked_to_normal(request, httpRequest, stream);
+      std::string new_body = std::string(request).substr(request.find("\r\n\r\n") + 4);
+      body = turn_chunked_to_normal(new_body);
     }
     if (httpRequest.path.find("?") != SIZE_T_MAX) {
       std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
