@@ -63,8 +63,8 @@ void response_errors(int client_fd, int code, const t_config & data) {
         default :
             break;
     }
-    //todo : if the response is the default status message, so the status code should be 404, else should be 302 or 301
-    bool  canICallDefault = false;
+    //todo : if bo html error pages set so the response  status code for example  should be 404, else should be 302 or 301 for redirecting the cline to the html page
+    bool  __unused canICallDefault = false;
     if (htmlData.empty()) {
         canICallDefault = true;
         htmlData = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>" + res_status + " </title></head><body style='text-align: center;'><h1> " + res_status + " </h1><hr /><p>webserv</p></body></html>";
