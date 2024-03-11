@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/02 17:23:54 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/11 16:16:48 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -400,26 +400,21 @@ int is_valid_request(HttpRequest & httpRequest, const t_config & config) {
 std::string turn_chunked_to_normal(std::string request) {
     std::string body = "";
     size_t pos = 0;
-    
     while (pos < request.size()) {
         size_t chunkSizeEnd = request.find("\r\n", pos);
         u_long hexa_chunked_size = std::stoul(request.substr(pos, chunkSizeEnd - pos), nullptr, 16);
         
-        if (hexa_chunked_size == 0) {
+        if (hexa_chunked_size == 0)
             break;
-        }
-        
         pos = chunkSizeEnd + 2; // Move past the current chunk size and CRLF
         
         std::string chunk = request.substr(pos, hexa_chunked_size);
         body += chunk;
         
         pos += hexa_chunked_size + 2; // Move past the current chunk
-        
-        if (request.substr(pos, 2) == "\r\n") {
-            // Move past the CRLF after the chunk
-            pos += 2;
-        }
+        if (request.substr(pos, 2) == "\r\n")
+          pos += 2;
+        // std::cout << "BPDY " << body << "\n";
     }
     while (body[body.length() - 2] == '\r' && body[body.length() - 1] == '\n')
       body.erase(body.length() - 2, 2);
@@ -443,7 +438,7 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config & confi
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
       httpRequest.chunked_end = 0;
-      if (request.find("0\r\n\r\n") == SIZE_T_MAX)
+      if (request.find("\r\n0\r\n\r\n") == SIZE_T_MAX)
         return httpRequest;
       httpRequest.chunked_end = 1;
       std::string new_body = std::string(request).substr(request.find("\r\n\r\n") + 4);
