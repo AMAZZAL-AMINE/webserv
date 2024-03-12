@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/12 13:12:49 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/12 16:20:52 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -420,6 +420,7 @@ std::string get_file_extention(char * resolvedPath, HttpRequest & req) {
         contentType = "text/plain";
     return contentType;
 }
+
 void file_response(HttpRequest &req, int &client_fd, const t_config & __unused data, char *resolvedPath) {
     int fd = open(resolvedPath, O_RDONLY);
     if (fd == -1) {
@@ -450,7 +451,13 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
     if (check_file_exist(resolvedPath) != 0) {
         response_errors(client_fd, check_file_exist(resolvedPath), data);
         return;
-    } else if (isDirectory(resolvedPath))
+    } else if (isDirectory(resolvedPath)) {
+        if (req.path[req.path.length() - 1] != '/' && req.path != "/") {
+            std::string httpRes = "HTTP/1.1 301 Moved Permanently\nLocation: " + req.path + "/\n\n";
+            send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+            std::cout << RED << "[RESPONSE - " << current_date() << "] " <<  BG_WHITE << BLACK << "301 Moved Permanently" << RESET << std::endl;
+            return;
+        }   
         if (access((std::string(resolvedPath) + "/" + data.index[0]).c_str(), F_OK) != -1)
             file_response(req, client_fd, data, (char *)(std::string(resolvedPath) + "/" + data.index[0]).c_str());
         else {
@@ -460,6 +467,7 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
             else if (data.autoindex == "on")
                 directory_response(req, client_fd, data);
         }
+    }
     else
         file_response(req, client_fd, data, resolvedPath);
 }
