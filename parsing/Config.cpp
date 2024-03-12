@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/26 13:57:02 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/12 12:37:10 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,14 @@ t_rederection get_derection(std::string line) {
   return rederection;
 }
 
+std::vector<int> get_ports(std::string  line) {
+  std::vector<std::string> str_ports = split_string(line, " ");
+  std::vector<int> ports;
+  for (size_t i = 0; i < str_ports.size(); i++)
+    ports.push_back(_atoi_(str_ports[i]));
+  return ports;
+}
+
 t_location get_location(std::ifstream & file, std::string & line) {
   t_location location;
   if (line.find("location") == 2) {
@@ -149,8 +157,8 @@ void Config::parsConfigFile(std::string confFile) {
     server_position = line.find("server {");
     if (server_position != SIZE_T_MAX && server_position == 0) {
       while (std::getline(file, line) && line.find("}") == SIZE_T_MAX) {
-        if (line.find("port") == 2)
-          s_conf.port = _atoi_(grepValue(line, "port"));
+        if (line.find("ports") == 2)
+          s_conf.ports = get_ports(grepValue(line, "ports"));
         else if (line.find("server_name") == 2)
           s_conf.server_name =  grepValue(line, "server_name");
         else if (line.find("host_name") == 2)

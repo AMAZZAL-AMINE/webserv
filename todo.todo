@@ -1,3 +1,8 @@
-[0] =======> hanlde chaunked request
-[1] =======> set default config
-[2] =======> set a default error pages
+
+//DONE
+[✅] =======> hanlde chaunked request
+
+//inprogress
+[...] =======> set multiple pages
+[...] =======> set default config
+[✅& ...] =======> set a default error pages

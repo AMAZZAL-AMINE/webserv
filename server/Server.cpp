@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/02 17:23:44 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/12 13:12:49 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,15 +73,18 @@ void Server::serve(std::vector<t_config> http_config) {
     struct sockaddr_in address;
     socklen_t addresslen = sizeof(address);
     for (size_t i = 0; i != http_config.size(); i++) {
-        int fd = setup_server(http_config[i], address);
-        server_fds.push_back(fd);
-        configs[fd] = http_config[i];
+        for (size_t j = 0; j != http_config[i].ports.size(); j++) {
+         t_config conf = http_config[i];
+         conf.port = http_config[i].ports[j];
+         int fd = setup_server(conf, address);
+         server_fds.push_back(fd);
+         configs[fd] = http_config[i];
+        }
     }
-    int server_fd_ = setup_server(http_config[0], address);
     std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] " << RESET << http_config[0].host_name << ":" << http_config[0].port << std::endl;
     timeval timeout;
     std::vector<int> client_sockets;
-    int max_fd = server_fd_ + 1;
+    int max_fd = std::max(server_fds[0], server_fds[1]);
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
     const int MAX_CLIENTS = 200;
@@ -89,6 +92,7 @@ void Server::serve(std::vector<t_config> http_config) {
     for (int i = 0; i < MAX_CLIENTS; i++)
         client_socket[i] = 0;
     int new_socket;
+    int server_fd_;
     while (true) {
         signal(SIGPIPE, SIG_IGN);
         fd_set read_fds, write_fds;
