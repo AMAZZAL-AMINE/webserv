@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/22 16:21:23 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/13 13:44:13 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,6 @@ enum E_METHOD
 #include "exceptionErrors.hpp"
 #include "server/Server.hpp"
 #include <stdlib.h>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <poll.h>
 #include <sstream>
@@ -58,7 +57,8 @@ enum E_METHOD
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
-
+#include <sys/types.h>
+#include <netdb.h>
 
 #define TIME_OUT 1000
 #define BACKLOG 20

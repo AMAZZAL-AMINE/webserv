@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/12 16:20:52 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/13 15:41:48 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,17 +36,23 @@ void set_nonblock(int socket) {
     fcntl(socket, F_SETFL, flags);
 }
 
+
 int Server::setup_server(const t_config & data,struct sockaddr_in & address) {
     int server_fd;
     int opt = 1;
 
+    memset(&address, 0, sizeof(address));
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     set_nonblock(server_fd);
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+    u_long ip = inet_addr(data.host_name.c_str());
+    address.sin_addr.s_addr =  ip == INADDR_NONE ? INADDR_ANY : ip;
     address.sin_port = htons(data.port);
-    bind(server_fd, (struct sockaddr *)&address, sizeof(address));
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }
     listen(server_fd, BACKLOG);
     return server_fd;
 }
