@@ -15,8 +15,10 @@ int isEmptyLine(const std::string &line) {
 
 void checkBrackets(const std::string & filename) {
     std::fstream file;
-    
-    file.open(filename, std::ios::in);
+    file.open(filename);
+    //check if file is empty
+    if (file.peek() == std::ifstream::traits_type::eof())
+        throw std::runtime_error("Error: " + filename + " is empty");
     if (!file.is_open())
         throw std::runtime_error("Error: " + filename + " not found");
     std::string line;
@@ -38,7 +40,6 @@ void checkBrackets(const std::string & filename) {
                 if (line.find("}") != SIZE_T_MAX) {
                     while (line[0] == ' ')
                         line.erase(0, 1);
-                    std::cout << "DEB MOOD : |" << line << "|" << std::endl;
                     if (line.length() != 1 || foundParentise == 0) {
                         file.close();
                         handleSyntaxErrorMessage("", line, lineNumber);
