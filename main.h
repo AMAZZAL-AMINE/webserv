@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/13 13:44:13 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/13 21:33:22 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,4 +81,5 @@ bool isDirectory(const char* path);
 char *current_date();
 std::vector<std::string> split_string(std::string s, std::string delimiter);
 void directory_response(HttpRequest & req, int & client_fd, const t_config & data);
+void SyntaxError(const std::string & filename);
 #endif

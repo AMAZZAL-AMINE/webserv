@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/13 15:41:48 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/14 16:18:11 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,9 +85,9 @@ void Server::serve(std::vector<t_config> http_config) {
          int fd = setup_server(conf, address);
          server_fds.push_back(fd);
          configs[fd] = http_config[i];
+         std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] [" << http_config[i].server_name + "] " << RESET << http_config[i].host_name << ":" << http_config[i].ports[j] << std::endl;
         }
     }
-    std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] " << RESET << http_config[0].host_name << ":" << http_config[0].port << std::endl;
     timeval timeout;
     std::vector<int> client_sockets;
     int max_fd = std::max(server_fds[0], server_fds[1]);
