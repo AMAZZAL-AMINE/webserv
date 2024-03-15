@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/26 20:56:18 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/12 12:34:02 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/15 15:31:13 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,7 @@ typedef struct t_config {
   std::vector<std::string> index;
   std::vector<int> ports;
   t_rederection rederection;
+  bool IsDefault;
 } t_config;
 
 class Config {

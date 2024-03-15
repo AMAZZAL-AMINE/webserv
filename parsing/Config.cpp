@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/12 12:37:10 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/15 15:41:05 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,6 +207,7 @@ void Config::parsConfigFile(std::string confFile) {
     }
     if (!s_conf.server_name.empty()) {
       check_methods(s_conf.methods);
+      s_conf.IsDefault = true;
       this->http_config.push_back(s_conf);
     }
   }

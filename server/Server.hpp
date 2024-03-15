@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/27 17:52:56 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/15 15:41:23 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,23 +19,6 @@
 #define FORM_DATA 201
 #define TEXT_PLAIN 202
 #define CHUNKED 203
-
-// enum E_FORM
-// {
-//   TEXT_PLAIN,
-//   DEFAULT_FORM,
-//   FORM_DATA,
-//   NULL_FORM
-// };
-
-typedef struct t_response {
-  long get_methdo_file_size;
-  long readed_bayt_;
-  bool is_header_sent;
-  bool is_finished_responsed;
-  int  fd;
-  std::string readed_str;
-} httpResponse;
 
 typedef struct HttpRequest {
   E_METHOD method;
@@ -60,7 +43,6 @@ typedef struct HttpRequest {
   std::map<std::string, std::string> headers;
   std::string query;
   std::string full_body;
-  httpResponse response;
 } HttpRequest;
 
 class Server {
