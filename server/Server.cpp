@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/15 16:24:58 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/16 21:31:11 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,14 +46,13 @@ int Server::setup_server(const t_config & data,struct sockaddr_in & address) {
     set_nonblock(server_fd);
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     address.sin_family = AF_INET;
-    u_long ip = inet_addr(data.host_name.c_str());
-    address.sin_addr.s_addr =  ip == INADDR_NONE ? INADDR_ANY : ip;
+    address.sin_addr.s_addr =  inet_addr(data.host_name.c_str());
     address.sin_port = htons(data.port);
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("bind");
-        exit(EXIT_FAILURE);
-    }
-    listen(server_fd, BACKLOG);
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
+        throw std::runtime_error("Could not bind server socket");
+    int lis = listen(server_fd, BACKLOG);
+    if (lis < 0)
+        throw std::runtime_error("Could not listen server socket");
     return server_fd;
 }
 
@@ -83,6 +82,8 @@ void Server::serve(std::vector<t_config> http_config) {
          t_config conf = http_config[i];
          conf.port = http_config[i].ports[j];
          int fd = setup_server(conf, address);
+         if (fd == -1)
+            throw std::runtime_error("Could not create server socket");
          server_fds.push_back(fd);
          configs[fd] = http_config[i];
          std::cout << GREEN << "[SERVER STARTED - " << current_date() << "] [" << http_config[i].server_name + "] " << RESET << http_config[i].host_name << ":" << http_config[i].ports[j] << std::endl;
@@ -93,7 +94,7 @@ void Server::serve(std::vector<t_config> http_config) {
     int max_fd = std::max(server_fds[0], server_fds[1]);
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
-    const int MAX_CLIENTS = 200;
+    const int MAX_CLIENTS = 255;
     int client_socket[MAX_CLIENTS];
     for (int i = 0; i < MAX_CLIENTS; i++)
         client_socket[i] = 0;
@@ -109,6 +110,10 @@ void Server::serve(std::vector<t_config> http_config) {
             FD_SET(server_fd_, &read_fds);
         }
         int activity = select(max_fd + 1, &read_fds, &write_fds, nullptr, &timeout);
+        if (activity < 0) {
+            std::cerr << "select error" << std::endl;
+            continue;
+        }
         for (int i = 0; i < MAX_CLIENTS; i++) {
             if (client_socket[i] > 0) {
                 FD_SET(client_socket[i], &read_fds);
@@ -116,17 +121,13 @@ void Server::serve(std::vector<t_config> http_config) {
                     max_fd = client_socket[i];
             }
         }
-        if (activity < 0) {
-            perror("select");
-            exit(EXIT_FAILURE);
-        }
         for(size_t i = 0; i != server_fds.size(); i++) {
             server_fd_ = server_fds[i];
             if (FD_ISSET(server_fd_, &read_fds)) {
                 new_socket = accept(server_fd_, (struct sockaddr *)&address, &addresslen);
                 if (new_socket < 0) {
-                    perror("accept");
-                    exit(EXIT_FAILURE);
+                    std::cerr << "accept error" << std::endl;
+                    continue;
                 }
                 for (int i = 0; i < MAX_CLIENTS; i++) {
                     if (client_socket[i] == 0) {
@@ -202,8 +203,6 @@ void Server::request_(int & __unused client_fd, const t_config & __unused data) 
 
 }
 
-void handle_delete_request(HttpRequest & __unused req, int & __unused client_fd, const t_config  & __unused data); 
-
 int check_file_exist(std::string path) {
     //check permission
     if (access(path.c_str(), F_OK) == -1)
@@ -217,6 +216,8 @@ std::string getLocationInPath(std::string path) {
     std::string location = "";
     if (path[0] == '/')
         path.erase(0, 1);
+    if (path.empty())
+        return location = "/";
     for (size_t i = 0; i < path.length(); i++) {
         if (path[i] == '/')
             break;
@@ -254,14 +255,23 @@ t_config change_location(HttpRequest & req, const t_config & data) {
     std::string location = getLocationInPath(req.path);
     if (location.empty())
         return data;
+    if (location != "/")
+        location = "/" + location;
     for (size_t i = 0; i < data.locations.size(); i++) {
-        if (data.locations[i].location.find(location) != std::string::npos) {
+        if (data.locations[i].location == location) {
             t_config location_config = exchange_location_to_config(data.locations[i], data);
             location_config.IsDefault = false;
             // remove the root from the path
             req.path.erase(0, location.length() + 1);
             if (req.path.empty())
                 req.path = "/";
+            return location_config;
+        }
+    }
+    for (size_t i = 0; i < data.locations.size(); i++) {
+        if (data.locations[i].location == "/") {
+            t_config location_config = exchange_location_to_config(data.locations[i], data);
+            location_config.IsDefault = false;
             return location_config;
         }
     }
@@ -371,7 +381,11 @@ bool isDirectory(const char* path) {
 }
 
 void directory_response(HttpRequest & req, int & client_fd, const t_config & data) {
-    std::string full_path = data.root + req.path;
+    if (req.path == "/")
+        req.path = "";
+    else if (req.path[req.path.length() - 1] == '/')
+        req.path.erase(req.path.length() - 1, 1);
+    std::string full_path = data.root + "/" + req.path;
     char resolvedPath[PATH_MAX];
     realpath(full_path.c_str(), resolvedPath);
     std::string htmlData = "";
@@ -390,6 +404,7 @@ void directory_response(HttpRequest & req, int & client_fd, const t_config & dat
         htmlData += "</pre>";
         closedir (dir);
     } else {
+        std::cout << "full_path : " << resolvedPath << std::endl;
         response_errors(client_fd, 404, data);
         return;
     }
@@ -451,7 +466,9 @@ void file_response(HttpRequest &req, int &client_fd, const t_config & __unused d
 }
 
 void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
-    std::string full_path = data.root + req.path;
+    std::string full_path = data.root + "/" + req.path;
+    if (full_path[full_path.length() - 1] == '/')
+        full_path.erase(full_path.length() - 1, 1);
     char resolvedPath[PATH_MAX];
     realpath(full_path.c_str(), resolvedPath);
     //check if file exist
@@ -461,7 +478,7 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
     } else if (isDirectory(resolvedPath)) {
         if (req.path[req.path.length() - 1] != '/' && req.path != "/") {
             if (data.IsDefault == false)
-                req.path = data.location + req.path;
+                req.path = data.location + "/" + req.path;
             std::string httpRes = "HTTP/1.1 301 Moved Permanently\nLocation: " + req.path + "/\n\n";
             send(client_fd, httpRes.c_str(), httpRes.length(), 0);
             std::cout << RED << "[RESPONSE - " << current_date() << "] " <<  BG_WHITE << BLACK << "301 Moved Permanently" << RESET << std::endl;

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/26 20:56:18 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/15 15:31:13 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/16 16:14:15 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ typedef struct t_location {
   std::string upload_dir;
   std::vector<std::string> index;
   std::vector<E_METHOD> methods;
+  std::string alias;
   int         max_body_size;
   t_rederection rederection;
 } t_location;

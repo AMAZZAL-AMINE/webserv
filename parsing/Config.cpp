@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/15 15:41:05 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/16 16:14:27 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,6 +95,15 @@ std::vector<int> get_ports(std::string  line) {
   return ports;
 }
 
+std::string clean_upload_key(std::string dir) {
+  if (dir[0] == '/')
+    dir.erase(0, 1);
+  if (dir[dir.length() - 1] == '/')
+    dir.erase(dir.length() - 1, 1);
+  dir = "/" + dir + "/";
+  return dir;
+}
+
 t_location get_location(std::ifstream & file, std::string & line) {
   t_location location;
   if (line.find("location") == 2) {
@@ -130,14 +139,15 @@ t_location get_location(std::ifstream & file, std::string & line) {
         std::string index = grepValue(line, "index");
         location.index = split_string(index, " ");
       }else if (line.find("upload_dir") == 4)
-        location.upload_dir = grepValue(line, "upload_dir");
+        location.upload_dir = clean_upload_key(grepValue(line, "upload_dir"));
       else if (line.find("methods") == 4) {
         std::string methods = grepValue(line, "methods");
         location.methods = split_methods(methods);
       } else if (line.find("redirect") == 4) {
           std::string methods = grepValue(line, "redirect");
           location.rederection = get_derection(methods);
-      }
+      }else if (line.find("alias") == 4)
+        location.alias = grepValue(line, "alias");
     }
   } 
   return location;
@@ -195,7 +205,7 @@ void Config::parsConfigFile(std::string confFile) {
           std::string index = grepValue(line, "index");
           s_conf.index = split_string(index, " ");
         }else if (line.find("upload_dir") == 2)
-          s_conf.upload_dir =  grepValue(line, "upload_dir");
+          s_conf.upload_dir =  clean_upload_key(grepValue(line, "upload_dir"));
         else if (line.find("methods") == 2) {
           std::string methods = grepValue(line, "methods");
           s_conf.methods = split_methods(methods);
@@ -207,6 +217,7 @@ void Config::parsConfigFile(std::string confFile) {
     }
     if (!s_conf.server_name.empty()) {
       check_methods(s_conf.methods);
+      
       s_conf.IsDefault = true;
       this->http_config.push_back(s_conf);
     }
