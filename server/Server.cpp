@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/17 12:03:38 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/17 16:39:12 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -308,10 +308,11 @@ void Server::handle_request(HttpRequest & req, int & client_fd, const t_config &
         std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << location_config.host_name << ":" << location_config.port << " "  << RESET << "  " << BG_WHITE << enum_to_string(req.method) << " " << req.path << RESET << std::endl;
         return;
     }
-
     else if (req.method == POST) {
         handle_post_requst(req, location_config);
-        directory_response(req, client_fd, location_config);
+        std::string html = "<html><head><title>" + req.path + "</title></head><body><h1>Your request has been created</h1></body></html>";
+        std::string httpRes = "HTTP/1.1 201 Created\nContent-Type: text/html\nContent-Length: " + std::to_string(html.length()) + "\n\n" + html + "\n";
+        send(client_fd, httpRes.c_str(), httpRes.length(), 0);
     } else if (req.method == GET) {
         handle_get_requst(req, client_fd, location_config);
         std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << location_config.host_name << ":" << location_config.port << " "  << RESET << " "  << enum_to_string(req.method) << " " << req.path << RESET << std::endl;   

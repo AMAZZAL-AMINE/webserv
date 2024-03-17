@@ -1,8 +1,9 @@
 
 //DONE
 [✅] =======> hanlde chaunked request
+[✅] =======> set a default error pages
 
 //inprogress
-[...] =======> set multiple pages
 [...] =======> set default config
-[✅& ...] =======> set a default error pages
+[...] =======> handle alias
+[...] =======> check location if the location name should be a directory

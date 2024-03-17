@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/24 15:40:44 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/12 16:28:50 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/17 15:51:47 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,52 +23,42 @@ char *current_date() {
 void response_errors(int client_fd, int code, const t_config & data) {
     std::string htmlData = "";
     std::string res_status = "";
-    std::string html_file_name = "";
     switch(code) {
         case 404 :
             htmlData = read_html_file(data.error404, data);
             res_status = "404 Not Found";
-            html_file_name = data.error404;
             break;
         case 500 :
             htmlData = read_html_file(data.error500, data);
             res_status = "500 Internal Server Error";
-            html_file_name = data.error500;
             break;
         case 400 :
             htmlData = read_html_file(data.error400, data);
             res_status = "400 Bad Request";
-            html_file_name = data.error400;
             break;
         case 408 :
             htmlData = read_html_file(data.error408, data);
             res_status = "408 Request Timeout";
-            html_file_name = data.error408;
             break;
         case 413 :
             htmlData = read_html_file(data.error413, data);
             res_status = "413 Payload Too Large";
-            html_file_name = data.error413;
             break;
         case 403 :
             htmlData = read_html_file(data.error403, data);
             res_status = "403 Forbidden";
-            html_file_name = data.error403;
             break;
         case  405 :
             htmlData = read_html_file(data.error405, data);
             res_status = "405 Method Not Allowed";
-            html_file_name = data.error405;
             break;
         case 501 :
             htmlData = read_html_file(data.error501, data);
             res_status = "501 Not Implemented";
-            html_file_name = data.error501;
             break;
         case 409 :
             htmlData = read_html_file(data.error409, data);
             res_status = "409 Conflict";
-            html_file_name = data.error409;
             break;
         default :
             break;
