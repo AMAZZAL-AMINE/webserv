@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/16 21:31:11 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/17 12:03:38 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -248,6 +248,7 @@ t_config  exchange_location_to_config(const t_location & location, const t_confi
     location_config.host_name = old_data.host_name;
     location_config.rederection = location.rederection;
     location_config.server_name = location.location.empty() ? old_data.server_name : location.location;
+    location_config.alias = location.alias;
     return location_config;
 }
 
@@ -290,6 +291,10 @@ bool check_redirection(HttpRequest & req, int & client_fd, const t_config & data
 
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
     t_config location_config = change_location(req, data);
+    if (!location_config.IsDefault && !location_config.alias.empty()) {
+        location_config.root.clear();
+        location_config.root = location_config.alias;
+    }
     if (check_redirection(req, client_fd, location_config))
         return ;
     if (req.path.find(".php") != SIZE_T_MAX && req.method != DELETE) {
@@ -397,8 +402,12 @@ void directory_response(HttpRequest & req, int & client_fd, const t_config & dat
             if (std::string(ent->d_name) != "." && std::string(ent->d_name) != "..") {
                 if (data.location.empty())
                     htmlData += "<a href=\"" + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
-                else
-                    htmlData += "<a href=\"" + data.location  + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
+                else {
+                    std::string new_location = data.location;
+                    if (new_location[new_location.length() - 1] != '/' && req.path[0] != '/' )
+                        new_location = new_location + "/";
+                    htmlData += "<a href=\"" + new_location  + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
+                }
             }
         }
         htmlData += "</pre>";
