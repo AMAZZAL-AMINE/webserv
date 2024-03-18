@@ -7,3 +7,4 @@
 [...] =======> set default config
 [...] =======> handle alias
 [...] =======> check location if the location name should be a directory
+[...] =======> andle redirection 301 in error pages
