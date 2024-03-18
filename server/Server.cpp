@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/17 16:39:12 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/18 16:48:28 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,7 +139,7 @@ void Server::serve(std::vector<t_config> http_config) {
                         break;
                     }
                 }
-        }
+            }
         }
         // Check each client socket for data to read
         for (int i = 0; i < MAX_CLIENTS; ++i) {
@@ -172,7 +172,6 @@ void Server::serve(std::vector<t_config> http_config) {
                     continue;
                 }
                 if (server_config[sd].req_parsed_data.method == POST &&  server_config[sd].req_parsed_data.is_chunked == true) {
-                    std::cout << "chunked not end\n";
                     if (server_config[sd].req_parsed_data.chunked_end != 1) {
                         FD_CLR(sd, &write_fds);
                         continue;

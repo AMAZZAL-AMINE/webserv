@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/15 17:26:16 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/18 16:49:13 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ enum E_METHOD
 #include <netdb.h>
 
 #define TIME_OUT 1000
-#define BACKLOG 30
+#define BACKLOG 120
 // #define MAX_CLIENTS 100
 #define BUFFER_SIZE 3000
 #define BUFFER_SIZE_BIG 4096
