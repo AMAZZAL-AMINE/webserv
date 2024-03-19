@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/18 16:48:28 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/19 15:14:47 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -242,7 +242,7 @@ t_config  exchange_location_to_config(const t_location & location, const t_confi
     location_config.error501 = location.error501;
     location_config.error409 = location.error409;
     location_config.max_body_size = location.max_body_size;
-    location_config.index = location.index;
+    location_config.index = location.index.empty() ? old_data.index : location.index;
     location_config.upload_dir = location.upload_dir;
     location_config.host_name = old_data.host_name;
     location_config.rederection = location.rederection;
