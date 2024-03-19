@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/19 15:14:47 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/19 17:19:33 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -230,17 +230,17 @@ t_config  exchange_location_to_config(const t_location & location, const t_confi
     location_config.root = location.root;
     location_config.port = old_data.port;
     location_config.location = location.location;
-    location_config.autoindex = location.autoindex;
+    location_config.autoindex = location.autoindex.empty() ? old_data.autoindex : location.autoindex;
     location_config.cgi_path = location.cgi_path;
-    location_config.error404 = location.error404;
-    location_config.error500 = location.error500;
-    location_config.error408 = location.error408;
-    location_config.error400 = location.error400;
-    location_config.error413 = location.error413;
-    location_config.error403 = location.error403;
-    location_config.error405 = location.error405;
-    location_config.error501 = location.error501;
-    location_config.error409 = location.error409;
+    location_config.error404 = location.error404.empty() ? old_data.error404 : location.error404;
+    location_config.error500 = location.error500.empty() ? old_data.error500 : location.error500;
+    location_config.error408 = location.error408.empty() ? old_data.error408 : location.error408;
+    location_config.error400 = location.error400.empty() ? old_data.error400 : location.error400;
+    location_config.error413 = location.error413.empty() ? old_data.error413 : location.error413;
+    location_config.error403 = location.error403.empty() ? old_data.error403 : location.error403;
+    location_config.error405 = location.error405.empty() ? old_data.error405 : location.error405;
+    location_config.error501 = location.error501.empty() ? old_data.error501 : location.error501;
+    location_config.error409 = location.error409.empty() ? old_data.error409 : location.error409;
     location_config.max_body_size = location.max_body_size;
     location_config.index = location.index.empty() ? old_data.index : location.index;
     location_config.upload_dir = location.upload_dir;
@@ -259,6 +259,15 @@ t_config change_location(HttpRequest & req, const t_config & data) {
         location = "/" + location;
     for (size_t i = 0; i < data.locations.size(); i++) {
         if (data.locations[i].location == location) {
+            // check if the location are valid (file, directory)
+            // char resolvedPath[PATH_MAX];
+            // std::string  location = data.locations[i].location;
+            // if (location[0] == '/')
+            //     location.erase(0, 1);
+            // realpath(location.c_str(), resolvedPath);
+            // std::cout << "resolvedPath : " << resolvedPath << std::endl;
+            // if (check_file_exist(resolvedPath) != 0 && location != "")
+            //     return data;
             t_config location_config = exchange_location_to_config(data.locations[i], data);
             location_config.IsDefault = false;
             // remove the root from the path
