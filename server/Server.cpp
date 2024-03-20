@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/19 17:19:33 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/20 17:51:27 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -259,21 +259,8 @@ t_config change_location(HttpRequest & req, const t_config & data) {
         location = "/" + location;
     for (size_t i = 0; i < data.locations.size(); i++) {
         if (data.locations[i].location == location) {
-            // check if the location are valid (file, directory)
-            // char resolvedPath[PATH_MAX];
-            // std::string  location = data.locations[i].location;
-            // if (location[0] == '/')
-            //     location.erase(0, 1);
-            // realpath(location.c_str(), resolvedPath);
-            // std::cout << "resolvedPath : " << resolvedPath << std::endl;
-            // if (check_file_exist(resolvedPath) != 0 && location != "")
-            //     return data;
             t_config location_config = exchange_location_to_config(data.locations[i], data);
             location_config.IsDefault = false;
-            // remove the root from the path
-            req.path.erase(0, location.length() + 1);
-            if (req.path.empty())
-                req.path = "/";
             return location_config;
         }
     }
@@ -495,8 +482,6 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
         return;
     } else if (isDirectory(resolvedPath)) {
         if (req.path[req.path.length() - 1] != '/' && req.path != "/") {
-            if (data.IsDefault == false)
-                req.path = data.location + "/" + req.path;
             std::string httpRes = "HTTP/1.1 301 Moved Permanently\nLocation: " + req.path + "/\n\n";
             send(client_fd, httpRes.c_str(), httpRes.length(), 0);
             std::cout << RED << "[RESPONSE - " << current_date() << "] " <<  BG_WHITE << BLACK << "301 Moved Permanently" << RESET << std::endl;
