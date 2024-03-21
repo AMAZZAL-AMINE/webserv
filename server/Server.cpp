@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/20 17:51:27 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/21 16:38:35 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -230,7 +230,7 @@ t_config  exchange_location_to_config(const t_location & location, const t_confi
     location_config.root = location.root;
     location_config.port = old_data.port;
     location_config.location = location.location;
-    location_config.autoindex = location.autoindex.empty() ? old_data.autoindex : location.autoindex;
+    location_config.autoindex = location.autoindex;
     location_config.cgi_path = location.cgi_path;
     location_config.error404 = location.error404.empty() ? old_data.error404 : location.error404;
     location_config.error500 = location.error500.empty() ? old_data.error500 : location.error500;
