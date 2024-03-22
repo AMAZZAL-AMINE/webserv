@@ -396,14 +396,14 @@ void directory_response(HttpRequest & req, int & client_fd, const t_config & dat
         htmlData += "<html><head><title>Index of " + req.path + "</title></head><body><h1>index of : " + req.path + "</h1><hr><pre>";
         while ((ent = readdir(dir)) != NULL) {
             if (std::string(ent->d_name) != "." && std::string(ent->d_name) != "..") {
-                if (data.location.empty())
+                // if (data.location.empty())
                     htmlData += "<a href=\"" + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
-                else {
-                    std::string new_location = data.location;
-                    if (new_location[new_location.length() - 1] != '/' && req.path[0] != '/' )
-                        new_location = new_location + "/";
-                    htmlData += "<a href=\"" + new_location  + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
-                }
+                // else {
+                //     std::string new_location = data.location;
+                //     if (new_location[new_location.length() - 1] != '/' && req.path[0] != '/' )
+                //         new_location = new_location + "/";
+                //     htmlData += "<a href=\"" + new_location  + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
+                // }
             }
         }
         htmlData += "</pre>";
