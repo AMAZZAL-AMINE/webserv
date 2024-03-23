@@ -232,15 +232,15 @@ t_config  exchange_location_to_config(const t_location & location, const t_confi
     location_config.location = location.location;
     location_config.autoindex = location.autoindex;
     location_config.cgi_path = location.cgi_path;
-    location_config.error404 = location.error404.empty() ? old_data.error404 : location.error404;
-    location_config.error500 = location.error500.empty() ? old_data.error500 : location.error500;
-    location_config.error408 = location.error408.empty() ? old_data.error408 : location.error408;
-    location_config.error400 = location.error400.empty() ? old_data.error400 : location.error400;
-    location_config.error413 = location.error413.empty() ? old_data.error413 : location.error413;
-    location_config.error403 = location.error403.empty() ? old_data.error403 : location.error403;
-    location_config.error405 = location.error405.empty() ? old_data.error405 : location.error405;
-    location_config.error501 = location.error501.empty() ? old_data.error501 : location.error501;
-    location_config.error409 = location.error409.empty() ? old_data.error409 : location.error409;
+    location_config.error404 = location.error404;
+    location_config.error500 = location.error500;
+    location_config.error408 = location.error408;
+    location_config.error400 = location.error400;
+    location_config.error413 = location.error413;
+    location_config.error403 = location.error403;
+    location_config.error405 = location.error405;
+    location_config.error501 = location.error501;
+    location_config.error409 = location.error409;
     location_config.max_body_size = location.max_body_size;
     location_config.index = location.index.empty() ? old_data.index : location.index;
     location_config.upload_dir = location.upload_dir;
@@ -287,8 +287,22 @@ bool check_redirection(HttpRequest & req, int & client_fd, const t_config & data
 void Server::handle_request(HttpRequest & req, int & client_fd, const t_config & data) {
     t_config location_config = change_location(req, data);
     if (!location_config.IsDefault && !location_config.alias.empty()) {
+        if (req.path[req.path.length() - 1] != '/') {
+            req.old_req = req.path;
+            if (req.old_req[0] != '/')
+                req.old_req = "/" + req.old_req;
+            else if (req.old_req[req.old_req.length() - 1] == '/')
+                req.old_req.erase(req.old_req.length() - 1, 1);
+        }
         location_config.root.clear();
         location_config.root = location_config.alias;
+        req.path = req.path.substr(location_config.location.length());
+        if (location_config.alias[location_config.alias.length() - 1] != '/')
+            location_config.alias += "/";
+        if (req.path[0] != '/')
+            req.path.erase(0, 1);
+        if (req.path.empty())
+            req.path = "/";
     }
     if (check_redirection(req, client_fd, location_config))
         return ;
@@ -393,23 +407,15 @@ void directory_response(HttpRequest & req, int & client_fd, const t_config & dat
     DIR *dir;
     struct dirent *ent;
     if ((dir = opendir(resolvedPath)) != NULL) {
+        if (!data.alias.empty())
+            req.path = data.location + req.path;
         htmlData += "<html><head><title>Index of " + req.path + "</title></head><body><h1>index of : " + req.path + "</h1><hr><pre>";
         while ((ent = readdir(dir)) != NULL) {
-            if (std::string(ent->d_name) != "." && std::string(ent->d_name) != "..") {
-                // if (data.location.empty())
-                    htmlData += "<a href=\"" + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
-                // else {
-                //     std::string new_location = data.location;
-                //     if (new_location[new_location.length() - 1] != '/' && req.path[0] != '/' )
-                //         new_location = new_location + "/";
-                //     htmlData += "<a href=\"" + new_location  + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
-                // }
-            }
+            htmlData += "<a href=\"" + req.path + "/" + ent->d_name + "\">" + ent->d_name + "</a><br>";
         }
         htmlData += "</pre>";
         closedir (dir);
     } else {
-        std::cout << "full_path : " << resolvedPath << std::endl;
         response_errors(client_fd, 404, data);
         return;
     }
@@ -470,6 +476,23 @@ void file_response(HttpRequest &req, int &client_fd, const t_config & __unused d
     close(fd);
 }
 
+int move_directory_with_slash(HttpRequest & req, int & client_fd, const t_config & data) {
+    if (req.path[req.path.length() - 1] != '/' && req.path != "/") {
+        if (!data.alias.empty())
+            req.path = data.location + req.path;
+        std::string httpRes = "HTTP/1.1 301 Moved Permanently\nLocation: " + req.path + "/\n\n";
+        send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+        std::cout << RED << "[RESPONSE - " << current_date() << "] " <<  BG_WHITE << BLACK << "301 Moved Permanently" << RESET << std::endl;
+        return 1;
+    }else if (!data.alias.empty() && data.location == req.old_req) {
+        std::string httpRes = "HTTP/1.1 301 Moved Permanently\nLocation: " + data.location + "/\n\n";
+        send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+        std::cout << RED << "[RESPONSE - " << current_date() << "] " <<  BG_WHITE << BLACK << "301 Moved Permanently" << RESET << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
 void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
     std::string full_path = data.root + "/" + req.path;
     if (full_path[full_path.length() - 1] == '/')
@@ -481,12 +504,8 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
         response_errors(client_fd, check_file_exist(resolvedPath), data);
         return;
     } else if (isDirectory(resolvedPath)) {
-        if (req.path[req.path.length() - 1] != '/' && req.path != "/") {
-            std::string httpRes = "HTTP/1.1 301 Moved Permanently\nLocation: " + req.path + "/\n\n";
-            send(client_fd, httpRes.c_str(), httpRes.length(), 0);
-            std::cout << RED << "[RESPONSE - " << current_date() << "] " <<  BG_WHITE << BLACK << "301 Moved Permanently" << RESET << std::endl;
+        if (move_directory_with_slash(req, client_fd, data))
             return;
-        }
         if (access((std::string(resolvedPath) + "/" + data.index[0]).c_str(), F_OK) != -1)
             file_response(req, client_fd, data, (char *)(std::string(resolvedPath) + "/" + data.index[0]).c_str());
         else {
@@ -503,10 +522,18 @@ void get_response(HttpRequest & req, int & client_fd, const t_config & data) {
 
 
 void Server::handle_get_requst(HttpRequest &  req, int & client_fd, const t_config & data) {
-    if (req.path == "/"  && data.autoindex == "on" && !req.has_query) {
-        std::string html = read_html_file(data.index[0], data);
-        std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(html.length()) + "\n\n" + html + "\n";
-        send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+    if (req.path == "/"  && !req.has_query) {
+        std::string html;
+        if (data.index.empty()) {
+            html = read_html_file("index.html", data);
+        }else 
+            html = read_html_file(data.index[0], data);
+        if (html.empty())
+             get_response(req, client_fd, data);
+        else {
+            std::string httpRes = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(html.length()) + "\n\n" + html + "\n";
+            send(client_fd, httpRes.c_str(), httpRes.length(), 0);
+        }
     }
     else if (!req.has_body)
         get_response(req, client_fd, data);

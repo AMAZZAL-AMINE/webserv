@@ -43,6 +43,7 @@ typedef struct HttpRequest {
   std::map<std::string, std::string> headers;
   std::string query;
   std::string full_body;
+  std::string old_req;
 } HttpRequest;
 
 class Server {
