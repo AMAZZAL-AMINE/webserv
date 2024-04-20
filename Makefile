@@ -6,13 +6,13 @@
 #    By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 10:49:29 by mamazzal          #+#    #+#              #
-#    Updated: 2024/04/20 13:06:45 by mamazzal         ###   ########.fr        #
+#    Updated: 2024/04/20 17:24:03 by mamazzal         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME=webserv
 
-SRC= main.cpp parsing/Config.cpp atoi.cpp server/Server.cpp parsing/request/ParsRequest.cpp  cgi/cgi.cpp server/response_error.cpp parsing/ConfigErrors.cpp \
+SRC= main.cpp parsing/config/Config.cpp atoi.cpp server/Server.cpp parsing/request/ParsRequest.cpp  cgi/cgi.cpp server/response_error.cpp parsing/ConfigErrors.cpp \
 	 response/Response.cpp
 OBJ=$(SRC:.cpp=.o)
 
