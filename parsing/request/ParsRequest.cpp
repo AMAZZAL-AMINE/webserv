@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/04 11:19:55 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/03/17 15:42:20 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,9 +177,9 @@ void split_body_encrypted_multi_form_data(HttpRequest & httpRequest, std::istrin
     else {
       if (i == 0)
         i++;
-      else
-        line += form_data + "\n";
-      // if (form_data != "\r")
+      else {
+          line += form_data + "\n";
+      }
     }
   }
 }
@@ -352,7 +352,6 @@ void split_chunked_body(std::istringstream & stream, HttpRequest & __unused http
   }
 }
 
-
 void parst_get_query(std::string query, HttpRequest & httpRequest) {
   std::string key = "";
   std::string value = "";
@@ -374,8 +373,17 @@ void parst_get_query(std::string query, HttpRequest & httpRequest) {
   }
 }
 
-int is_valid_request(HttpRequest & httpRequest) {
+int is_valid_request(HttpRequest & httpRequest, const t_config & config) {
   httpRequest.is_valid = false;
+  bool find = false;
+  for (size_t i = 0; i < config.methods.size(); i++) {
+    if (config.methods[i] == httpRequest.method) {
+      find = true;
+      break;
+    }
+  }
+  if (find == false)
+    return (httpRequest.ifnotvalid_code_status = 405, -1);
   if (httpRequest.method == POST) {
     std::string content_type = "Transfer-Encoding";
     std::map<std::string, std::string> head = get_header(content_type, httpRequest);
@@ -388,7 +396,32 @@ int is_valid_request(HttpRequest & httpRequest) {
   return 1;
 }
 
-HttpRequest parseHttpRequest(const std::string & request, const t_config &  __unused config) {
+
+std::string turn_chunked_to_normal(std::string request) {
+    std::string body = "";
+    size_t pos = 0;
+    while (pos < request.size()) {
+        size_t chunkSizeEnd = request.find("\r\n", pos);
+        u_long hexa_chunked_size = std::stoul(request.substr(pos, chunkSizeEnd - pos), nullptr, 16);
+        
+        if (hexa_chunked_size == 0)
+            break;
+        pos = chunkSizeEnd + 2; // Move past the current chunk size and CRLF
+        
+        std::string chunk = request.substr(pos, hexa_chunked_size);
+        body += chunk;
+        
+        pos += hexa_chunked_size + 2; // Move past the current chunk
+        if (request.substr(pos, 2) == "\r\n")
+          pos += 2;
+        // std::cout << "BPDY " << body << "\n";
+    }
+    while (body[body.length() - 2] == '\r' && body[body.length() - 1] == '\n')
+      body.erase(body.length() - 2, 2);
+    return body;
+}
+
+HttpRequest parseHttpRequest(const std::string & request, const t_config & config) {
   HttpRequest httpRequest;
   std::istringstream stream(request);
   std::string method;
@@ -396,28 +429,39 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config &  __un
   httpRequest.method = method == "GET" ? GET : method == "POST" ? POST : DELETE;
   httpRequest.headers = get_headers(stream);
   httpRequest.is_valid = true;
-  if (is_valid_request(httpRequest) == -1) {
-    std::cout << request << std::endl;
+  if (is_valid_request(httpRequest, config) == -1)
     return httpRequest;
-  }
+  httpRequest.is_valid = true;
+  httpRequest.ifnotvalid_code_status = 0;
   if (httpRequest.method == POST) {
+    std::string body = "";
     if (httpRequest.headers["Transfer-Encoding"] == "chunked")  {
       httpRequest.is_chunked = true;
-      split_chunked_body(stream, httpRequest);
-    }else {
-      if (httpRequest.path.find("?") != SIZE_T_MAX) {
-        std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
-        pars_post_query(query, httpRequest);
-        httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
-      }
-      handel_method_post(stream, httpRequest);
+      httpRequest.chunked_end = 0;
+      if (request.find("\r\n0\r\n\r\n") == SIZE_T_MAX)
+        return httpRequest;
+      httpRequest.chunked_end = 1;
+      std::string new_body = std::string(request).substr(request.find("\r\n\r\n") + 4);
+      body = turn_chunked_to_normal(new_body);
     }
+    if (httpRequest.path.find("?") != SIZE_T_MAX) {
+      std::string query = httpRequest.path.substr(httpRequest.path.find("?") + 1);
+      pars_post_query(query, httpRequest);
+      httpRequest.path = httpRequest.path.substr(0, httpRequest.path.find("?"));
+    }
+    if (httpRequest.is_chunked && !body.empty()) {
+      stream.clear();
+      stream.str(body);
+    }
+    handel_method_post(stream, httpRequest);
     httpRequest.has_query = false;
     httpRequest.has_body = true;
-    httpRequest.is_ency_upl_file = true;
     httpRequest.full_body = request.substr(request.find("\r\n\r\n") + 4);
+    if (httpRequest.full_body.length() > (size_t)config.max_body_size)
+      httpRequest.ifnotvalid_code_status = 413;
   }
   else {
+    httpRequest.content_length = 0;
     httpRequest.has_body = false;
     httpRequest.is_chunked = false;
     httpRequest.has_query = false;

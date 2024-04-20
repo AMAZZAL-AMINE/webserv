@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/11 16:29:54 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/20 13:09:19 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,14 @@
 #define WHITE "\033[37m"
 #define BG_WHITE "\033[47m"
 
+enum E_METHOD
+{
+  GET,
+  POST,
+  DELETE,
+  NULL_METHOD
+};
+
 #include <iostream>
 #include <fstream>
 #include <sys/socket.h>
@@ -41,7 +49,6 @@
 #include "exceptionErrors.hpp"
 #include "server/Server.hpp"
 #include <stdlib.h>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <poll.h>
 #include <sstream>
@@ -50,10 +57,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
-
+#include <sys/types.h>
+#include <netdb.h>
+#include "response/Response.hpp"
 
 #define TIME_OUT 1000
-#define BACKLOG 20
+#define BACKLOG 120
 // #define MAX_CLIENTS 100
 #define BUFFER_SIZE 3000
 #define BUFFER_SIZE_BIG 4096
@@ -71,4 +80,6 @@ std::string read_html_file(std::string fhtml, const t_config & data);
 std::string enum_to_string(E_METHOD method);
 bool isDirectory(const char* path);
 char *current_date();
+void directory_response(HttpRequest & req, int & client_fd, const t_config & data);
+void SyntaxError(const std::string & filename);
 #endif

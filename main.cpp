@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:44:16 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/24 17:30:46 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/20 13:03:25 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ int main(int argc, char __unused **argv) {
     return 1;
   }
   try {
+    SyntaxError(argv[1]);
     Config sttp_pars;
     sttp_pars.parsConfigFile(argv[1]);
     std::vector<t_config> http_config = sttp_pars.getConfig();

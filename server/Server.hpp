@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:47:50 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/02/12 15:34:35 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/20 13:03:15 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,31 +18,7 @@
 #define DEFAULT_FORM 200
 #define FORM_DATA 201
 #define TEXT_PLAIN 202
-
-enum E_METHOD
-{
-  GET,
-  POST,
-  DELETE,
-  NULL_METHOD
-};
-
-// enum E_FORM
-// {
-//   TEXT_PLAIN,
-//   DEFAULT_FORM,
-//   FORM_DATA,
-//   NULL_FORM
-// };
-
-typedef struct t_response {
-  long get_methdo_file_size;
-  long readed_bayt_;
-  bool is_header_sent;
-  bool is_finished_responsed;
-  int  fd;
-  std::string readed_str;
-} httpResponse;
+#define CHUNKED 203
 
 typedef struct HttpRequest {
   E_METHOD method;
@@ -55,6 +31,7 @@ typedef struct HttpRequest {
   int has_body;
   int has_query;
   int if_post_form_type;
+  int  chunked_end;
   std::vector<std::string> form_data;
   std::vector<std::string> file_name;
   std::vector<std::string> content_type;
@@ -66,7 +43,7 @@ typedef struct HttpRequest {
   std::map<std::string, std::string> headers;
   std::string query;
   std::string full_body;
-  httpResponse response;
+  std::string old_req;
 } HttpRequest;
 
 class Server {
