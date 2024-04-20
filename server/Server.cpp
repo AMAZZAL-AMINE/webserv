@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yichiba <yichiba@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 22:48:52 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/18 18:40:10 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/20 17:55:01 by yichiba          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,6 @@ void prinHttpRequest(HttpRequest & req) {
 
 void Server::serve(const t_config & data) {
     int server_fd;
-
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
     server_fd = setup_server(data, address);
@@ -118,8 +117,6 @@ void Server::serve(const t_config & data) {
         if (ret == 0)
            response_errors(client_fd, 408, data);
         else if (ret < 0)
-            response_errors(client_fd, 500, data);
-        else if (ret == -1)
             response_errors(client_fd, 500, data);
         else {
             char buffer[3000] = {0};
