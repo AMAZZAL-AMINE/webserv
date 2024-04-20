@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/16 16:14:27 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/20 13:10:01 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ std::string grepLocationValue(std::string line) {
 
 std::vector<E_METHOD> split_methods(std::string methods) {
   std::vector<E_METHOD> methods_;
-  std::vector<std::string> methods_str = split_string(methods, " ");
+  std::vector<std::string> methods_str = Response::split_string(methods, " ");
   for (size_t i = 0; i < methods_str.size(); i++) {
     if (methods_str[i] == "GET")
       methods_.push_back(GET);
@@ -88,7 +88,7 @@ t_rederection get_derection(std::string line) {
 }
 
 std::vector<int> get_ports(std::string  line) {
-  std::vector<std::string> str_ports = split_string(line, " ");
+  std::vector<std::string> str_ports = Response::split_string(line, " ");
   std::vector<int> ports;
   for (size_t i = 0; i < str_ports.size(); i++)
     ports.push_back(_atoi_(str_ports[i]));
@@ -137,7 +137,7 @@ t_location get_location(std::ifstream & file, std::string & line) {
         location.max_body_size = _atoi_(grepValue(line, "max_body_size"));
       else if (line.find("index") == 4) {
         std::string index = grepValue(line, "index");
-        location.index = split_string(index, " ");
+        location.index = Response::split_string(index, " ");
       }else if (line.find("upload_dir") == 4)
         location.upload_dir = clean_upload_key(grepValue(line, "upload_dir"));
       else if (line.find("methods") == 4) {
@@ -203,7 +203,7 @@ void Config::parsConfigFile(std::string confFile) {
           s_conf.locations.push_back(get_location(file, line));
         else if (line.find("index") == 2) {
           std::string index = grepValue(line, "index");
-          s_conf.index = split_string(index, " ");
+          s_conf.index = Response::split_string(index, " ");
         }else if (line.find("upload_dir") == 2)
           s_conf.upload_dir =  clean_upload_key(grepValue(line, "upload_dir"));
         else if (line.find("methods") == 2) {

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/18 16:49:13 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/20 13:09:19 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,7 @@ enum E_METHOD
 #include <dirent.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include "response/Response.hpp"
 
 #define TIME_OUT 1000
 #define BACKLOG 120
@@ -79,7 +80,6 @@ std::string read_html_file(std::string fhtml, const t_config & data);
 std::string enum_to_string(E_METHOD method);
 bool isDirectory(const char* path);
 char *current_date();
-std::vector<std::string> split_string(std::string s, std::string delimiter);
 void directory_response(HttpRequest & req, int & client_fd, const t_config & data);
 void SyntaxError(const std::string & filename);
 #endif
