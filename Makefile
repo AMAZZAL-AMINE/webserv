@@ -6,14 +6,14 @@
 #    By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 10:49:29 by mamazzal          #+#    #+#              #
-#    Updated: 2024/04/20 17:24:03 by mamazzal         ###   ########.fr        #
+#    Updated: 2024/04/22 15:38:10 by mamazzal         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME=webserv
 
-SRC= main.cpp parsing/config/Config.cpp atoi.cpp server/Server.cpp parsing/request/ParsRequest.cpp  cgi/cgi.cpp server/response_error.cpp parsing/ConfigErrors.cpp \
-	 response/Response.cpp
+SRC= main.cpp parsing/config/Config.cpp atoi.cpp server/Server.cpp parsing/request/ParsRequest.cpp  cgi/cgi.cpp parsing/ConfigErrors.cpp \
+	#  response/Response.cpp server/response_error.cpp
 OBJ=$(SRC:.cpp=.o)
 
 FLAGS=-Wall -Wextra -Werror -std=c++98 -fsanitize=address -g3
