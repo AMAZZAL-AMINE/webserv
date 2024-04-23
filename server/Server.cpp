@@ -80,6 +80,7 @@ void    Server::setup_clients(int * client_fds, fd_set& readFd, int &max, std::m
 
 void    Server::receve_request(int *client_fds,std::map<int, int> clients_map, fd_set &readFd, fd_set &writeFd){
     char buffer[BUFFER_SIZE+1];
+    t_response response;
     for(int i = 0;i < MAX_CLIENT; i++){
         if(client_fds[i] != clients_map[client_fds[i]]){
             int rec = read(client_fds[i],buffer, BUFFER_SIZE );
@@ -91,8 +92,12 @@ void    Server::receve_request(int *client_fds,std::map<int, int> clients_map, f
             }
         }
         if (FD_ISSET(client_fds[i], &writeFd)) {
-            std::string response  = "HTTP/1.1 200 OK\nContent-Length: 13\nContent-Type: text/html\n\nHello World!";
-            write(client_fds[i], response.c_str() ,response.length());
+            response.client_fd = client_fds[i];
+            response.server_fd = clients_map[client_fds[i]];
+            response.request = buffer;
+            response.config = this->servers[response.server_fd];
+            this->requests_map[client_fds[i]] = response;
+            this->response(this->requests_map[client_fds[i]]);
             FD_CLR(client_fds[i], &writeFd);
             FD_CLR(client_fds[i], &readFd);
             close(client_fds[i]);

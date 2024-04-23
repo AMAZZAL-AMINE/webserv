@@ -2,8 +2,9 @@
 #define SERVER_HPP
 
 #include "../parsing/config/Config.hpp"
+#include "../response/Response.hpp"
 
-class Server : public Config {
+class Server : public Response {
     private:
         std::vector<int> server_fds;
         std::map<int,t_config> servers;
