@@ -1,60 +1,59 @@
 #include "Response.hpp"
 #include <iostream>
-#include <cstdio>
-#include <cerrno>
 
 bool isDirectory(const std::string& path)
 {
-    struct stat fileStat;
-    if (stat(path.c_str(), &fileStat) == 0)
+    struct stat fileStat; // get the file status
+    if (stat(path.c_str(), &fileStat) == 0) // check if the file exists
     {
-        return S_ISDIR(fileStat.st_mode);
-    } else
+        return S_ISDIR(fileStat.st_mode); // check if it is a directory
+    }
+    else
     {
-        std::cerr << "Error: " << std::strerror(errno) << std::endl;
+        std::cerr << "Error: " << std::strerror(errno) << std::endl; // error
         return false;
     }
 }
 
 void Response::deleteFile(const std::string& filename, HttpRequest & __unused request)
 {
-    std::string file = filename + request.path;
-    if (std::remove(filename.c_str()) != 0)
+    std::string file = filename + request.path; // get the file path
+    if (std::remove(filename.c_str()) != 0) // remove the file
     {
-        std::cerr << "404 Not Found"<< std::endl;
+        std::cerr << "Error 505 Internal Server Error"<< std::endl; // internal server error
     }
     else
-        std::cout << file << " deleted successfully" << std::endl;
+        std::cout << "Success 204 No Content" << std::endl; // success
 }
 
 void Response::Delete(t_response & __unused res, HttpRequest & __unused request)
 {
-    if (request.method == DELETE)
+    if (request.method == DELETE) // check if the method is DELETE
     {
-        std::string rootPath = res.config.Config["root"] + request.path;
-        if (isDirectory(rootPath))
+        std::string rootPath = res.config.Config["root"] + request.path; // get the root path
+        if (access(rootPath.c_str(), F_OK) == -1) // check if file exists
         {
-            if (!request.path.empty() && request.path.back() == '/')
+            std::cout << "Error 404 Not Found" << std::endl; // file not found
+            return;
+        }
+        if (isDirectory(rootPath)) // check if it is a directory
+        {
+            if (!request.path.empty() && request.path.back() == '/') // check if the path ends with '/'
             {
                 if (access(rootPath.c_str(), W_OK) == 0) // check permission
                 {
-                    deleteFile(rootPath, request);
-                    std::cout << "Success 204" << std::endl;
-                    // if (rmdir(rootPath.c_str()) == 0)
-                    //     std::cout << "Success 204: Directory deleted successfully" << std::endl;
-                    // else
-                    //     std::cerr << "Error 500: Unable to delete directory" << std::endl;
+                    deleteFile(rootPath, request); // delete the file
                 }
                 else
-                    std::cout << "Error 403" << std::endl;
+                    std::cout << "Error 403 Forbiden" << std::endl; // permission denied
             }
             else
-                std::cout << "Error 409" << std::endl;
+                std::cout << "Error 409 Conflict" << std::endl; // conflict
         }
         else
         {
-            deleteFile(rootPath, request);
-            std::cout << rootPath << " File Deleted" << std::endl;
+            deleteFile(rootPath, request); // delete the file
+            std::cout << rootPath << " File Deleted" << std::endl;  // success
         }
     }
 }
