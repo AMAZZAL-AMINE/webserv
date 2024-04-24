@@ -9,7 +9,6 @@ int     Response::isRequestFinished(t_response & res) {
         if (static_cast<size_t>(_atoi_(request.headers["Content-Length"])) > request.full_body.length())
             return 0;
     }
-    std::cout << "Request is finished\n";
     return 1;
 }
 
