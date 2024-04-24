@@ -21,7 +21,8 @@ class Response : public Config
         void response(t_response &);
         void Post(t_response &, HttpRequest &);
         void Delete(t_response &, HttpRequest &);
-        int     isRequestFinished(t_response &);
+        int  isRequestFinished(t_response &);
+        void deleteFile(const std::string& filename, HttpRequest & __unused request);
         ~Response();
 };
 
