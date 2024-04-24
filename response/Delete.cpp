@@ -32,7 +32,6 @@ void Response::Delete(t_response & __unused res, HttpRequest & __unused request)
     if (request.method == DELETE)
     {
         std::string rootPath = res.config.Config["root"] + request.path;
-
         if (isDirectory(rootPath))
         {
             std::cout << rootPath << " is a directory." << std::endl;

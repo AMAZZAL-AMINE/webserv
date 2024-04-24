@@ -9,6 +9,7 @@ typedef struct t_response
     std::string request;
     int client_fd;
     int server_fd;
+    int isReuqestFinished;
 } t_response;
 
 class Response : public Config
@@ -20,6 +21,7 @@ class Response : public Config
         void response(t_response &);
         void Post(t_response &, HttpRequest &);
         void Delete(t_response &, HttpRequest &);
+        int     isRequestFinished(t_response &);
         ~Response();
 };
 
