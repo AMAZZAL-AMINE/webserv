@@ -6,7 +6,11 @@ Response::Response() {}
 int     Response::isRequestFinished(t_response & res) {
     HttpRequest request = parseHttpRequest(res.request, res.config);
     if (request.method == POST) {
-        if (static_cast<size_t>(_atoi_(request.headers["Content-Length"])) > request.full_body.length())
+        if (request.headers["Transfer-Encoding"] == "chunked") {
+            if (!request.chunked_end)
+                return 0;
+        }
+        else if (static_cast<size_t>(_atoi_(request.headers["Content-Length"])) > request.full_body.length())
             return 0;
     }
     return 1;
