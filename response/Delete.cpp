@@ -28,32 +28,29 @@ void Response::deleteFile(const std::string& filename, HttpRequest & __unused re
 
 void Response::Delete(t_response & __unused res, HttpRequest & __unused request)
 {
-    if (request.method == DELETE) // check if the method is DELETE
+    std::string rootPath = res.config.Config["root"] + request.path; // get the root path
+    if (access(rootPath.c_str(), F_OK) == -1) // check if file exists
     {
-        std::string rootPath = res.config.Config["root"] + request.path; // get the root path
-        if (access(rootPath.c_str(), F_OK) == -1) // check if file exists
+        std::cout << "Error 404 Not Found" << std::endl; // file not found
+        return;
+    }
+    if (isDirectory(rootPath)) // check if it is a directory
+    {
+        if (!request.path.empty() && request.path.back() == '/') // check if the path ends with '/'
         {
-            std::cout << "Error 404 Not Found" << std::endl; // file not found
-            return;
-        }
-        if (isDirectory(rootPath)) // check if it is a directory
-        {
-            if (!request.path.empty() && request.path.back() == '/') // check if the path ends with '/'
+            if (access(rootPath.c_str(), W_OK) == 0) // check permission
             {
-                if (access(rootPath.c_str(), W_OK) == 0) // check permission
-                {
-                    deleteFile(rootPath, request); // delete the file
-                }
-                else
-                    std::cout << "Error 403 Forbiden" << std::endl; // permission denied
+                deleteFile(rootPath, request); // delete the file
             }
             else
-                std::cout << "Error 409 Conflict" << std::endl; // conflict
+                std::cout << "Error 403 Forbiden" << std::endl; // permission denied
         }
         else
-        {
-            deleteFile(rootPath, request); // delete the file
-            std::cout << rootPath << " File Deleted" << std::endl;  // success
-        }
+            std::cout << "Error 409 Conflict" << std::endl; // conflict
+    }
+    else
+    {
+        deleteFile(rootPath, request); // delete the file
+        std::cout << rootPath << " File Deleted" << std::endl;  // success
     }
 }
