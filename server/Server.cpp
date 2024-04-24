@@ -105,6 +105,7 @@ void    Server::receve_request(std::map<int, int> & __unused clients_map, fd_set
             this->requests_map[this->client_fds[i]].request.append(buffer, rec); //if the client already we append the new request to the old one
             if (this->isRequestFinished(this->requests_map[this->client_fds[i]])) {
                 this->response(this->requests_map[this->client_fds[i]]);
+                //clear the request after sending the response ad remove the client from the map
                 FD_CLR(this->client_fds[i], &readFd);
                 FD_CLR(this->client_fds[i], &writeFd);
                 close(this->client_fds[i]);
