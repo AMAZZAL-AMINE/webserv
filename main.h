@@ -6,7 +6,7 @@
 /*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/04/24 14:57:26 by rouali           ###   ########.fr       */
+/*   Updated: 2024/04/25 18:35:22 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ typedef struct HttpRequest {
   int if_post_form_type;
   int  chunked_end;
   std::vector<std::string> form_data;
-  std::vector<std::string> file_name; 
+  std::vector<std::string> file_name;
   std::vector<std::string> content_type;
   std::vector<std::string> content_names;
   std::map<std::string, std::string> query_params;
