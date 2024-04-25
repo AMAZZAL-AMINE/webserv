@@ -49,19 +49,17 @@ void    Response::Get(HttpRequest& request, int fd)
         if(S_ISREG(stats.st_mode)){
            this->isFile(request, fd);
         }else if (S_ISDIR(stats.st_mode)){
-            if(request.path.back() == '/'){
+            if(request.path.back() == '/') {
                 std::cout << "its a directory \n";
                 this->isDir(request, fd);
             }
             else {
                 std::string httpRes = "HTTP/1.1 301 Moved Permanently\nLocation: " + request.path + "/\n\n";
-                std::cout << "its dosent end with it \n"; // redirection 301!!
                 send(fd, httpRes.c_str(), httpRes.length(), 0);
             }
         }
-    }else{
-        std::cout << "path not found \n"; // 404 error NOT FOUND
-    }
+    }else
+        this->errorResponse(requests_map[fd], request, 404, "Not Found");
 }
 
 
