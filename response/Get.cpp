@@ -41,7 +41,7 @@ void    Response::isFile(HttpRequest& request,int fd){
 }
 
 
-void    Response::GET(HttpRequest& request, int fd)
+void    Response::Get(HttpRequest& request, int fd)
 {
     struct stat stats;
     std::string path = requests_map[fd].config.Config["root"]  + request.path;
@@ -56,6 +56,7 @@ void    Response::GET(HttpRequest& request, int fd)
             else {
                 std::string httpRes = "HTTP/1.1 301 Moved Permanently\nLocation: " + request.path + "/\n\n";
                 std::cout << "its dosent end with it \n"; // redirection 301!!
+                send(fd, httpRes.c_str(), httpRes.length(), 0);
             }
         }
     }else{

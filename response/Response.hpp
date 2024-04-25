@@ -22,7 +22,7 @@ class Response : public Config {
         void    Delete(t_response &, HttpRequest &);
         int     isRequestFinished(t_response &);
         void    deleteFile(const std::string& filename, HttpRequest & __unused request);
-        void    GET(HttpRequest& request, int fd);
+        void    Get(HttpRequest& request, int fd);
         void    isFile(HttpRequest& request, int fd);
         void    isDir(HttpRequest& request, int fd);
         ~Response();
