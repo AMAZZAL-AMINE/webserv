@@ -33,6 +33,7 @@ class Response : public Config {
         std::string getMimeType(std::string & key);
         std::string getFileExtension(std::string & path);
         std::string readfile_(std::string path);
+        void        uploadFail(t_response & __unused res, HttpRequest & __unused request, size_t i, int r);
         ~Response();
 };
 
