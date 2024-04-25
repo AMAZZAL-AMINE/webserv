@@ -6,22 +6,12 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:44:16 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/04/20 13:03:25 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/22 15:38:20 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "main.h"
-
-void display_config(std::vector<t_config> http_config) {
-  std::vector<t_config>::iterator start = http_config.begin();
-  for (; start != http_config.end(); start++) {
-    t_config conf = *start;
-    std::cout << "SERVER_NAME : " << conf.server_name + "\n";
-    std::cout << "PORT : " << conf.port << "\n";
-    std::cout << "++++++\n";
-  }
-}
-
+#include "server/Server.hpp"
 
 
 int main(int argc, char __unused **argv) {
@@ -31,11 +21,9 @@ int main(int argc, char __unused **argv) {
   }
   try {
     SyntaxError(argv[1]);
-    Config sttp_pars;
-    sttp_pars.parsConfigFile(argv[1]);
-    std::vector<t_config> http_config = sttp_pars.getConfig();
-    Server server(http_config.at(0));
-    server.serve(http_config);
+    Server server;
+    server.parsConfigFile(argv[1]);
+    server.runServer();
   } catch (std::exception & e) {
     std::cout << e.what() << std::endl;
   }

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/03/17 15:42:20 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/22 15:30:47 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -373,29 +373,6 @@ void parst_get_query(std::string query, HttpRequest & httpRequest) {
   }
 }
 
-int is_valid_request(HttpRequest & httpRequest, const t_config & config) {
-  httpRequest.is_valid = false;
-  bool find = false;
-  for (size_t i = 0; i < config.methods.size(); i++) {
-    if (config.methods[i] == httpRequest.method) {
-      find = true;
-      break;
-    }
-  }
-  if (find == false)
-    return (httpRequest.ifnotvalid_code_status = 405, -1);
-  if (httpRequest.method == POST) {
-    std::string content_type = "Transfer-Encoding";
-    std::map<std::string, std::string> head = get_header(content_type, httpRequest);
-    if (!head.empty() && head[content_type] != "chunked")
-      return (httpRequest.ifnotvalid_code_status = 501, -1);
-    else if (httpRequest.headers["Transfer-Encoding"].empty()  &&  httpRequest.headers["Content-Length"].empty())
-      return (httpRequest.ifnotvalid_code_status = 400, -1);
-  }
-  httpRequest.is_valid = true;
-  return 1;
-}
-
 
 std::string turn_chunked_to_normal(std::string request) {
     std::string body = "";
@@ -421,7 +398,7 @@ std::string turn_chunked_to_normal(std::string request) {
     return body;
 }
 
-HttpRequest parseHttpRequest(const std::string & request, const t_config & config) {
+HttpRequest parseHttpRequest(const std::string & request,  t_config & config) {
   HttpRequest httpRequest;
   std::istringstream stream(request);
   std::string method;
@@ -429,8 +406,6 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config & confi
   httpRequest.method = method == "GET" ? GET : method == "POST" ? POST : DELETE;
   httpRequest.headers = get_headers(stream);
   httpRequest.is_valid = true;
-  if (is_valid_request(httpRequest, config) == -1)
-    return httpRequest;
   httpRequest.is_valid = true;
   httpRequest.ifnotvalid_code_status = 0;
   if (httpRequest.method == POST) {
@@ -457,7 +432,7 @@ HttpRequest parseHttpRequest(const std::string & request, const t_config & confi
     httpRequest.has_query = false;
     httpRequest.has_body = true;
     httpRequest.full_body = request.substr(request.find("\r\n\r\n") + 4);
-    if (httpRequest.full_body.length() > (size_t)config.max_body_size)
+    if (httpRequest.full_body.length() > (size_t)(_atoi_(config.Config["max_body_size"])))
       httpRequest.ifnotvalid_code_status = 413;
   }
   else {
