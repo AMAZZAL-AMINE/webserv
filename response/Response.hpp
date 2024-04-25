@@ -12,17 +12,19 @@ typedef struct t_response
     int isReuqestFinished;
 } t_response;
 
-class Response : public Config
-{
+class Response : public Config {
     protected :
         std::map<int, t_response> requests_map;
     public :
         Response();
-        void response(t_response &);
-        void Post(t_response &, HttpRequest &);
-        void Delete(t_response &, HttpRequest &);
-        int  isRequestFinished(t_response &);
-        void deleteFile(const std::string& filename, HttpRequest & __unused request);
+        void    response(t_response &);
+        void    Post(t_response &, HttpRequest &);
+        void    Delete(t_response &, HttpRequest &);
+        int     isRequestFinished(t_response &);
+        void    deleteFile(const std::string& filename, HttpRequest & __unused request);
+        void    GET(HttpRequest& request, int fd);
+        void    isFile(HttpRequest& request, int fd);
+        void    isDir(HttpRequest& request, int fd);
         ~Response();
 };
 
