@@ -35,6 +35,7 @@ void Response::generateResponseMovement(t_response & res,HttpRequest & req, std:
     response = head;
     head.clear();
     send(res.client_fd, response.c_str(), response.size(), 0);
+    std::cout << "response: " << response << std::endl;
 }
 
 std::string Response::defaultErrorPage(int & code, std::string & status_message) {

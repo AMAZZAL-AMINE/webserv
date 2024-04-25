@@ -21,7 +21,7 @@ class Response : public Config {
         void        Post(t_response &, HttpRequest &);
         void        Delete(t_response &, HttpRequest &);
         int         isRequestFinished(t_response &);
-        void        deleteFile(const std::string&, HttpRequest &);
+        void        deleteFile(const std::string&, HttpRequest &, t_response &);
         void        Get(HttpRequest&, int);
         void        isFile(HttpRequest&, int);
         void        isDir(HttpRequest&, int);
