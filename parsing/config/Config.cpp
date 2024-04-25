@@ -3,16 +3,47 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/04/20 16:54:07 by rouali           ###   ########.fr       */
+/*   Updated: 2024/04/25 18:36:27 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
 
-Config::Config() {}
+Config::Config() {
+  std::string mimeFile = "mime.types";
+  std::ifstream file;
+  std::string line;
+  file.open(mimeFile);
+  if (!file)
+    throw std::runtime_error("Error: mime.types file not found");
+  while (std::getline(file, line)) {
+    std::string key;
+    std::string value;
+    size_t i = 0;
+    while (line[i] == ' ')
+      i++;
+    if (i >= line.length())
+      throw confFileError();
+    while (line[i] != ' ' && i < line.length())
+    {
+      key += line[i];
+      i++;
+    }
+    while (line[i] == ' ')
+      i++;
+    if (i >= line.length())
+      throw confFileError();
+    while (line[i] != ' ' && i < line.length())
+    {
+      value += line[i];
+      i++;
+    }
+    this->mime_types[value] = key;
+  }
+}
 
 std::string grepValue(std::string & key, std::string target) {
   size_t pos =0;

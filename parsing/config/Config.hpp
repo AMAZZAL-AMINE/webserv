@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/26 20:56:18 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/04/22 15:22:11 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/25 18:29:49 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 class Config {
   protected :
     std::vector<t_config> http_config;
+    std::map<std::string, std::string> mime_types;
   public :
     Config();
     void parsConfigFile(std::string confFile);
