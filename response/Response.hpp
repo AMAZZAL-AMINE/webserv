@@ -17,6 +17,7 @@ class Response : public Config {
         std::map<int, t_response> requests_map;
     public :
         Response();
+        void        listFiles(const char* path);
         void        response(t_response &);
         void        Post(t_response &, HttpRequest &);
         void        Delete(t_response &, HttpRequest &);

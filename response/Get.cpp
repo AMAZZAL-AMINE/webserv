@@ -6,37 +6,42 @@
 #include <cstdlib>
 #include <dirent.h>
 
-
 void    Response::isDir(HttpRequest& request, int fd){
+    std::string htmlData = "";
+    std::map<std::string,std::string > files_path;
     std::string path = requests_map[fd].config.Config["root"]  + request.path;
-    const char* directory_path = path.c_str();
-    DIR* dir;
     struct dirent* entry;
 
-    dir = opendir(directory_path);
+    DIR* dir;
+    dir = opendir(path.c_str());
     if (dir == NULL)
-        perror("opendir dsoem");
-
+        perror("opendir failed");
+    htmlData += "HTTP/1.1 200 OK\n\n <html><head><title>Index of " + request.path + "</title></head><body><h1>index of : " + request.path + "</h1><hr><pre>";
     while ((entry = readdir(dir)) != NULL){
+        htmlData += "<a href=\"" + request.path  + entry->d_name + "\">" + entry->d_name + "</a><br>";
         if (strncmp(entry->d_name, "index.", 6) == 0) {
-            Response::isFile(request, fd); //file sent to isFile()!
-            closedir(dir);
-            return ;
+            request.path += entry->d_name;
+            Response::isFile(request, fd); 
+        closedir(dir);
+        return ;
         }
     }
-    if(requests_map[fd].config.Config["autoindex"] == "on"){
-        std::cout << "autoindex is on  " << directory_path << std::endl;
-        //list all directory files 
-    }
+    htmlData += "</pre></html>";
+    closedir(dir);
+    if(requests_map[fd].config.Config["autoindex"] == "on")
+        send(fd, htmlData.c_str(), htmlData.length(), 0);      
+    else
+        this->errorResponse(requests_map[fd], request, 403, "Forbidden");
+
 }
 
 void    Response::isFile(HttpRequest& request,int fd){
     std::string path = requests_map[fd].config.Config["root"]  + request.path;
-    if(access(path.c_str(), X_OK) != -1){
+    std::cout <<path << std::endl;
+    if(access(path.c_str(), X_OK) != -1  && request.path.find(".php") != std::string::npos) {
         std::string cgi_response = run_cgi(request, this->requests_map[fd].config, "", this->requests_map[fd].config.Config["cgi_path"]);
-        std::cout <<"request CGI !!!"<<std::endl; //send to CGI
     }else
-        std::cout <<" return the file!! 200 OK" << std::endl; 
+       this->generateResponseFile(requests_map[fd], request, 200, "OK");
     
 }
 
@@ -49,10 +54,8 @@ void    Response::Get(HttpRequest& request, int fd)
         if(S_ISREG(stats.st_mode)){
            this->isFile(request, fd);
         }else if (S_ISDIR(stats.st_mode)){
-            if(request.path.back() == '/') {
-                std::cout << "its a directory \n";
+            if(request.path.back() == '/') 
                 this->isDir(request, fd);
-            }
             else {
                 std::string httpRes = "HTTP/1.1 301 Moved Permanently\nLocation: " + request.path + "/\n\n";
                 send(fd, httpRes.c_str(), httpRes.length(), 0);
