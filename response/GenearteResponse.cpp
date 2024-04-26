@@ -18,7 +18,7 @@ std::string Response::getFileExtension(std::string & path) {
             break;
         extension += path[i];
     }
-    extension.reserve();
+    std::reverse(extension.begin(), extension.end());
     return extension;
 }
 
