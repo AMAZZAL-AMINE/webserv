@@ -38,6 +38,7 @@ class Response : public Config {
         std::string grepLocationFromPath(std::string & path);
         int         isPathFindInLocation(std::string & location_name, t_config & config);
         void        changeLocation(HttpRequest & req, t_response & resp);
+        void        popTheLastWordFromPath(std::string & path);
         ~Response();
 };
 
