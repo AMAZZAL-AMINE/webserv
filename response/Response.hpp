@@ -34,7 +34,7 @@ class Response : public Config {
         std::string getMimeType(std::string & key);
         std::string getFileExtension(std::string & path);
         std::string readfile_(std::string path);
-        void        uploadFail(t_response & __unused res, HttpRequest & __unused request, size_t i, int r);
+        void        uploadFile(t_response & __unused res, HttpRequest & __unused request, size_t i, int r);
         t_location  getLocationConfig(std::string & locatin_name, t_config & Config);
         std::string grepLocationFromPath(std::string & path);
         int         isPathFindInLocation(std::string & location_name, t_config & config);

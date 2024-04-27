@@ -1,6 +1,6 @@
 #include "Response.hpp"
 
-void Response::uploadFail(t_response & __unused res, HttpRequest & __unused request, size_t i, int r)
+void Response::uploadFile(t_response & __unused res, HttpRequest & __unused request, size_t i, int r)
 {
     std::string upload_dir;
     std::cout << "file name: " << request.file_name[r] << std::endl;
@@ -23,7 +23,7 @@ void Response::Post(t_response & __unused res, HttpRequest & __unused request)
     {
         if (request.content_type[i] == "file_upload")
         {
-            uploadFail(res, request, i, r);
+            this->uploadFile(res, request, i, r);
             r++;
         }
         else
