@@ -3,6 +3,10 @@
 std::string Response::grepLocationFromPath(std::string & path) {
     std::string location_name;
     size_t i = 0;
+    if (path[0] == '/' && path.size() > 1) {
+        location_name += path[0];
+        i++;
+    }
     while (path[i] != '/' && i < path.size()) {
         location_name += path[i];
         i++;
@@ -17,6 +21,10 @@ int Response::isPathFindInLocation(std::string & location_name, t_config & confi
         if (config.location[i].location_name == location_name)
             return 1;
     }
+    for (size_t i = 0; i < config.location.size(); i++)  {
+        if (config.location[i].location_name == "/")
+            return 1;
+    }
     return 0;
 }
 
@@ -24,6 +32,10 @@ t_location Response::getLocationConfig(std::string & location_name, t_config & c
     size_t i = 0;
     for (; i < config.location.size(); i++)  {
         if (config.location[i].location_name == location_name)
+            return config.location[i];
+    }
+    for (i = 0; i < config.location.size(); i++)  {
+        if (config.location[i].location_name == "/")
             break;
     }
     return config.location[i];

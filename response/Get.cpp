@@ -29,7 +29,7 @@ void    Response::isDir(HttpRequest& request, int fd){
     htmlData += "</pre></html>";
     closedir(dir);
     if(requests_map[fd].config.Config["autoindex"] == "on")
-        send(fd, htmlData.c_str(), htmlData.length(), 0);      
+        send(fd, htmlData.c_str(), htmlData.length(), 0);
     else
         this->errorResponse(requests_map[fd], request, 403, "Forbidden");
 
