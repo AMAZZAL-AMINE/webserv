@@ -22,7 +22,7 @@ class Response : public Config {
         void        Post(t_response &, HttpRequest &);
         void        Delete(t_response &, HttpRequest &);
         int         isRequestFinished(t_response &);
-        void        deleteFile(const std::string&, HttpRequest &);
+        void        deleteFile(const std::string&, HttpRequest &, t_response &);
         void        Get(HttpRequest&, int);
         void        isFile(HttpRequest&, int);
         void        isDir(HttpRequest&, int);
@@ -34,6 +34,7 @@ class Response : public Config {
         std::string getMimeType(std::string & key);
         std::string getFileExtension(std::string & path);
         std::string readfile_(std::string path);
+        void        uploadFail(t_response & __unused res, HttpRequest & __unused request, size_t i, int r);
         t_location  getLocationConfig(std::string & locatin_name, t_config & Config);
         std::string grepLocationFromPath(std::string & path);
         int         isPathFindInLocation(std::string & location_name, t_config & config);
