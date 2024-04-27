@@ -102,7 +102,7 @@ void Response::handle_request(HttpRequest & req, int & client_fd, const t_config
     if (!location_config.IsDefault && !location_config.alias.empty()) {
         if (req.path[req.path.length() - 1] != '/') {
             req.old_req = req.path;
-            if (req.old_req[0] != '/')
+            if (req.old_req[0] != '/').
                 req.old_req = "/" + req.old_req;
             else if (req.old_req[req.old_req.length() - 1] == '/')
                 req.old_req.erase(req.old_req.length() - 1, 1);
@@ -113,7 +113,7 @@ void Response::handle_request(HttpRequest & req, int & client_fd, const t_config
         if (location_config.alias[location_config.alias.length() - 1] != '/')
             location_config.alias += "/";
         if (req.path[0] != '/')
-            req.path.erase(0, 1);
+            req.path.erase(0, 1);0
         if (req.path.empty())
             req.path = "/";
     }
