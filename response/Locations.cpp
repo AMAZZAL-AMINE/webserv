@@ -54,6 +54,16 @@ void Response::popTheLastWordFromPath(std::string & path) {
         path.pop_back();
 }
 
+
+void Response::locationHasAlias(HttpRequest & req, t_response & resp, std::string & location_name) {
+    if (!resp.config.Config["alias"].empty()) {
+        req.path.erase(0, location_name.size());
+       if (resp.config.Config["alias"].back() != '/' && req.path.front() != '/')
+            resp.config.Config["alias"] += "/";
+        resp.config.Config["root"]  = resp.config.Config["alias"];
+    }
+}
+
 void Response::changeLocation(HttpRequest & req, t_response & resp) {
     std::string location_str = req.path;
     while (true) {
@@ -70,4 +80,5 @@ void Response::changeLocation(HttpRequest & req, t_response & resp) {
         else if (location_str == "/")
             break;
     }
+    this->locationHasAlias(req, resp, location_str);
 }
