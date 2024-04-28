@@ -64,6 +64,37 @@ void Response::locationHasAlias(HttpRequest & req, t_response & resp, std::strin
     }
 }
 
+std::map<std::string, std::string> splitRedirecion(std::string & redirection) {
+    std::map<std::string, std::string> redirection_map;
+    std::string code;
+    std::string url;
+    size_t i = 0;
+    while (redirection[i] == ' ')
+        i++;
+    while (redirection[i] != ' ') {
+        code += redirection[i];
+        i++;
+    }
+    while (redirection[i] == ' ')
+        i++;
+    while (i < redirection.size()) {
+        url += redirection[i];
+        i++;
+    }
+    redirection_map[code] = url;
+    return redirection_map;
+}
+
+int Response::hasRedirection(HttpRequest &  __unused req, t_response & resp) {
+    if (!resp.config.Config["return"].empty()) {
+        std::map<std::string, std::string> redirection = splitRedirecion(resp.config.Config["return"]);
+        std::string resi = "HTTP/1.1 " + redirection.begin()->first + " Moved Permanently \r\nLocation: " + redirection.begin()->second + "\r\n\r\n";
+        send(resp.client_fd, resi.c_str(), resi.size(), 0);
+        return 1;
+    }
+    return 0;
+}
+
 void Response::changeLocation(HttpRequest & req, t_response & resp) {
     std::string location_str = req.path;
     while (true) {
@@ -73,12 +104,12 @@ void Response::changeLocation(HttpRequest & req, t_response & resp) {
             t_location location = getLocationConfig(location_str, resp.config);
             resp.config.Config = location.location;
             break;
-        }else if (!isPathFindInLocation(location_str, resp.config)) {
+        }else if (!isPathFindInLocation(location_str, resp.config))
             this->popTheLastWordFromPath(location_str);
-            std::cout  << location_str << std::endl;
-        }
         else if (location_str == "/")
             break;
     }
+    if (this->hasRedirection(req, resp))
+        return;
     this->locationHasAlias(req, resp, location_str);
 }

@@ -10,7 +10,6 @@ void Response::uploadFile(t_response & __unused res, HttpRequest & __unused requ
     if (res.config.Config["upload_dir"].back() != '/')
         res.config.Config["upload_dir"] += "/";
     upload_dir = res.config.Config["root"] + res.config.Config["upload_dir"];
-    std::cout << "Upload dir: " << upload_dir << std::endl;
     std::ofstream outfile(upload_dir + request.file_name[r], std::ios::binary);
     outfile.write(request.form_data[i].data(), request.form_data[i].size());
     outfile.close();

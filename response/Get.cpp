@@ -37,7 +37,6 @@ void    Response::isDir(HttpRequest& request, int fd){
 
 void    Response::isFile(HttpRequest& request,int fd){
     std::string path = requests_map[fd].config.Config["root"]  + request.path;
-    std::cout <<path << std::endl;
     if(access(path.c_str(), X_OK) != -1  && request.path.find(".php") != std::string::npos) {
         std::string cgi_response = run_cgi(request, this->requests_map[fd].config, "", this->requests_map[fd].config.Config["cgi_path"]);
     }else
@@ -64,5 +63,3 @@ void    Response::Get(HttpRequest& request, int fd)
     }else
         this->errorResponse(requests_map[fd], request, 404, "Not Found");
 }
-
-
