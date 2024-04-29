@@ -42,6 +42,7 @@ class Response : public Config {
         void        popTheLastWordFromPath(std::string & path);
         int         hasRedirection(HttpRequest & req, t_response & resp);
         void        locationHasAlias(HttpRequest & req, t_response & resp,  std::string & location_name);
+        bool        isDirectory(const std::string& path);
         ~Response();
 };
 
