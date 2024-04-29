@@ -17,6 +17,7 @@ class Response : public Config {
         std::map<int, t_response> requests_map;
     public :
         Response();
+        void        listFiles(const char* path);
         void        response(t_response &);
         void        Post(t_response &, HttpRequest &);
         void        Delete(t_response &, HttpRequest &);
@@ -34,6 +35,11 @@ class Response : public Config {
         std::string getFileExtension(std::string & path);
         std::string readfile_(std::string path);
         void        uploadFail(t_response & __unused res, HttpRequest & __unused request, size_t i, int r);
+        t_location  getLocationConfig(std::string & locatin_name, t_config & Config);
+        std::string grepLocationFromPath(std::string & path);
+        int         isPathFindInLocation(std::string & location_name, t_config & config);
+        void        changeLocation(HttpRequest & req, t_response & resp);
+        void        popTheLastWordFromPath(std::string & path);
         ~Response();
 };
 
