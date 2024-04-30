@@ -63,7 +63,7 @@ void    Server::setup_clients(fd_set& readFd, int &max, std::map<int, int> & cli
                 continue;
             }
             std::cout << "NEW CLIENT CONNECTED : " << clientFd << "\n";
-            set_nonblock(clientFd);
+            // set_nonblock(clientFd);
             t_response response;
             response.client_fd = clientFd;
             response.server_fd = *it;
