@@ -57,10 +57,19 @@ void Response::popTheLastWordFromPath(std::string & path) {
 
 void Response::locationHasAlias(HttpRequest & req, t_response & resp, std::string & location_name) {
     if (!resp.config.Config["alias"].empty()) {
+        std::string req_path = req.path; //save the original path
         req.path.erase(0, location_name.size());
+        if (req.path.empty())
+            req.path = "/";
        if (resp.config.Config["alias"].back() != '/' && req.path.front() != '/')
             resp.config.Config["alias"] += "/";
         resp.config.Config["root"]  = resp.config.Config["alias"];
+        const std::string path =  resp.config.Config["alias"] + req.path;
+        if (this->isDirectory(path) && req_path.back() != '/') {
+            std::string res = "HTTP/1.1 301 Moved Permanently\r\nLocation: " + req_path + "/\r\n\r\n";
+            send(resp.client_fd, res.c_str(), res.size(), 0);
+        }
+        req_path.clear();
     }
 }
 

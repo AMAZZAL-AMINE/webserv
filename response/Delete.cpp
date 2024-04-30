@@ -1,7 +1,7 @@
 #include "Response.hpp"
 #include <iostream>
 
-bool isDirectory(const std::string& path)
+bool Response::isDirectory(const std::string& path)
 {
     struct stat fileStat; // get the file status
     if (stat(path.c_str(), &fileStat) == 0) // check if the file exists

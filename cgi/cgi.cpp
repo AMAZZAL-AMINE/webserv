@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/04/22 15:31:38 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/04/30 15:05:08 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,10 +151,7 @@ std::string  run_cgi(HttpRequest & __unused req, t_config & data , std::string _
     std::string SCRIPT_FILENAME = script_filename; //"./cgi/cgi.php";
     std::string CONTENT_TYPE = req.headers["Content-Type"];
     std::string REQUEST_METHOD = enum_to_string(req.method);
-    std::cout << "full body: " << req.full_body << std::endl;
-    std::cout << "full body length = " << req.full_body.size() << std::endl;
     std::string CONTENT_LENGTH = _itos_(req.content_length);
-    std::cout << "CONTENT_LENGTH: " << CONTENT_LENGTH << std::endl;
     std::string QUERY_STRING = req.has_query ? req.query : "test=1";
     std::string SERVER_PROTOCOL = req.version;
     std::string SERVER_SOFTWARE = "localhost";
