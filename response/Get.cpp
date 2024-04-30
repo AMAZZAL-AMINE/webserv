@@ -13,6 +13,13 @@ void    Response::isDir(HttpRequest& request, int fd){
     struct dirent* entry;
 
     DIR* dir;
+    if(requests_map[fd].config.Config["index"] != "")
+    {
+        std::cout << "index = " <<requests_map[fd].config.Config["index"] <<  std::endl;
+        request.path += requests_map[fd].config.Config["index"];
+        Response::isFile(request, fd);
+        return ;
+    }
     dir = opendir(path.c_str());
     if (dir == NULL)
         perror("opendir failed");
@@ -34,7 +41,7 @@ void    Response::isDir(HttpRequest& request, int fd){
         this->errorResponse(requests_map[fd], request, 403, "Forbidden");
 
 }
-
+ 
 void    Response::isFile(HttpRequest& request,int fd){
     std::string path = requests_map[fd].config.Config["root"]  + request.path;
     if(access(path.c_str(), X_OK) != -1  && request.path.find(".php") != std::string::npos) {
