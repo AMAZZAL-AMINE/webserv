@@ -20,8 +20,6 @@ int     Response::isRequestFinished(t_response & res) {
 
 void Response::response(t_response & __unused res)
 {
-    if (this->checkRequest(res.request, res) == 0)
-        return;
     HttpRequest request = parseHttpRequest(res.request, res.config);
     this->changeLocation(request, res);
     if (request.method == POST)

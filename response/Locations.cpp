@@ -118,6 +118,8 @@ void Response::changeLocation(HttpRequest & req, t_response & resp) {
         else if (location_str == "/")
             break;
     }
+    if (this->checkRequest(resp.request, resp) == 0)
+        return;
     if (this->hasRedirection(req, resp))
         return;
     this->locationHasAlias(req, resp, location_str);
