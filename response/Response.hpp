@@ -43,6 +43,8 @@ class Response : public Config {
         int         hasRedirection(HttpRequest & req, t_response & resp);
         void        locationHasAlias(HttpRequest & req, t_response & resp,  std::string & location_name);
         bool        isDirectory(const std::string& path);
+        int         checkRequest(std::string & request, t_response & response);
+        int         checkMethods(HttpRequest & req, t_response & response);
         ~Response();
 };
 
