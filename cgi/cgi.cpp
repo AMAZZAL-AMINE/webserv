@@ -6,7 +6,7 @@
 /*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/04/30 15:05:08 by rouali           ###   ########.fr       */
+/*   Updated: 2024/05/01 11:55:43 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,9 +136,15 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME, std::string CGI)
 std::string enum_to_string(E_METHOD method)
 {
     if (method == GET)
+    {
+        std::cout << "=====GET====\n";
         return "GET";
+    }
     else if (method == POST)
+    {
+        std::cout << "=====POST====\n";
         return "POST";
+    }
     else if (method == DELETE)
         return "DELETE";
     return "NULL";
@@ -161,9 +167,11 @@ std::string  run_cgi(HttpRequest & __unused req, t_config & data , std::string _
     cgi my_cgi(head, req.full_body, SCRIPT_NAME, SCRIPT_FILENAME, CONTENT_TYPE,
                REQUEST_METHOD, CONTENT_LENGTH, QUERY_STRING, SERVER_PROTOCOL,
                SERVER_SOFTWARE, SERVER_NAME, GATEWAY_INTERFACE, REDIRECT_STATUS);
-
+    std::cout << "gg : " << req.full_body << std::endl;
     std::string script_excut = my_cgi.fill_env(SCRIPT_FILENAME, data.Config["cgi_path"]);
-    std::cout << "script resutl = " << script_excut << std::endl;
+    std::cout << "SCRIPT_FILENAME : " << SCRIPT_FILENAME << std::endl;
+    std::cout << "data.Config['cgi_path'] : " << data.Config["cgi_path"] << std::endl;
+    std::cout << "script : " << script_excut << std::endl;
     size_t pos = script_excut.find("\r\n\r\n");
     std::string cgi_headers = script_excut.substr(0, pos);
     script_excut.erase(0, pos + 4);
