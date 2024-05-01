@@ -38,9 +38,31 @@ int Response::checkMethods(HttpRequest & req, t_response & response) {
     return 1;
 }
 
+int Response::checkHeaders(HttpRequest & req, t_response & response) {
+    if (req.method == POST) {
+        if (!req.headers["Transfer-Encoding"].empty() && req.headers["Transfer-Encoding"] != "chunked") {
+            this->errorResponse(response, req, 501, "Not Implemented");
+            return 0;
+        }else if (req.headers["Content-Length"].empty() && req.headers["Transfer-Encoding"].empty()) {
+            this->errorResponse(response, req, 400, "Bad Request");
+            return 0;
+        }else if (_atoi_(req.headers["Content-Length"]) > _atoi_(response.config.Config["max_body_size"])) {
+            this->errorResponse(response, req, 413, "Request Entity Too Large");
+            return 0;
+        }
+    }
+    if (req.path.size() > 2048) {
+        this->errorResponse(response, req, 414, "URI Too Long");
+        return 0;
+    }
+    return 1;
+}
+
 int Response::checkRequest(std::string & request, t_response & response) {
     HttpRequest req = parseHttpRequest(request, response.config);
-    if (this->checkMethods(req, response) == 0)
+    if (!this->checkMethods(req, response))
+        return 0;
+    if (!this->checkHeaders(req, response))
         return 0;
     return 1;
 }
