@@ -113,10 +113,11 @@ int Response::changeLocation(HttpRequest & req, t_response & resp) {
             t_location location = getLocationConfig(location_str, resp.config);
             resp.config.Config = location.location;
             break;
-        }else if (!isPathFindInLocation(location_str, resp.config))
+        }else if (!isPathFindInLocation(location_str, resp.config)) {
             this->popTheLastWordFromPath(location_str);
-        else if (location_str == "/")
-            break;
+            if (location_str == "/" && !isPathFindInLocation(location_str, resp.config))
+                break;
+        }
     }
     if (this->checkRequest(resp.request, resp) == 0)
         return 0;
