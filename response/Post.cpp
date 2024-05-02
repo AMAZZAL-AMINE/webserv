@@ -18,16 +18,38 @@ void Response::uploadFile(t_response & __unused res, HttpRequest & __unused requ
 void Response::Post(t_response & __unused res, HttpRequest & __unused request)
 {
     int r = 0;
-    for(size_t i = 0; i < request.form_data.size(); i++)
+    if (request.if_post_form_type == FORM_DATA && request.path.find(".php") == SIZE_T_MAX && !res.config.Config["upload_dir"].empty())
     {
-        if (request.content_type[i] == "file_upload")
+        for(size_t i = 0; i < request.form_data.size(); i++)
         {
-            this->uploadFile(res, request, i, r);
-            r++;
+            if (request.content_type[i] == "file_upload")
+            {
+                this->uploadFile(res, request, i, r);
+                r++;
+            }
+            else
+            {
+                std::cout << request.content_names[i] << " : " << request.form_data[i] << std::endl; 
+            }
         }
-        else
+    }
+    else
+    {
+        std::string checkPath = res.config.Config["root"] + request.path;
+        struct stat fileStat;
+        if (stat(checkPath.c_str(), &fileStat) != 0)
         {
-            std::cout << request.content_names[i] << " : " << request.form_data[i] << std::endl; 
+            this->errorResponse(res, request, 404, "Not Found");
+            return ;
         }
+        if (this->isDirectory(checkPath))
+            this->Get(request, res.client_fd);
+        else if (request.path.find(".php") != SIZE_T_MAX)
+        {
+            std::string resp = run_cgi(request, res.config, "", checkPath);
+            send(res.client_fd, resp.c_str(), resp.length(), 0);
+        }
+        else if (request.path.find(".php") == SIZE_T_MAX)
+            this->Get(request, res.client_fd);
     }
 }
