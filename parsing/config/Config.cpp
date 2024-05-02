@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/05/01 18:55:01 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/05/02 15:12:13 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,8 +149,9 @@ void  Config::generateDefaultConfig() {
   config.Config["server_name"] = "localhost";
   config.Config["host"] = "192.10.1.1";
   config.Config["port"] = "9090";
-  config.Config["root"] = "/";
-  config.Config["auto_index"] = "on";
+  config.Config["root"] = ".";
+  config.Config["autoindex"] = "off";
+  config.Config["methods"] = "GET POST DELETE";
   this->http_config.push_back(config);
 }
 
