@@ -38,11 +38,14 @@ class Response : public Config {
         t_location  getLocationConfig(std::string & locatin_name, t_config & Config);
         std::string grepLocationFromPath(std::string & path);
         int         isPathFindInLocation(std::string & location_name, t_config & config);
-        void        changeLocation(HttpRequest & req, t_response & resp);
+        int         changeLocation(HttpRequest & req, t_response & resp);
         void        popTheLastWordFromPath(std::string & path);
         int         hasRedirection(HttpRequest & req, t_response & resp);
         void        locationHasAlias(HttpRequest & req, t_response & resp,  std::string & location_name);
         bool        isDirectory(const std::string& path);
+        int         checkRequest(std::string & request, t_response & response);
+        int         checkMethods(HttpRequest & req, t_response & response);
+        int         checkHeaders(HttpRequest & req, t_response & response);
         ~Response();
 };
 
