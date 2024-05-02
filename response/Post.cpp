@@ -10,6 +10,7 @@ void Response::uploadFile(t_response & __unused res, HttpRequest & __unused requ
     if (res.config.Config["upload_dir"].back() != '/')
         res.config.Config["upload_dir"] += "/";
     upload_dir = res.config.Config["root"] + res.config.Config["upload_dir"];
+    std::cout << "UPL:  " << upload_dir << std::endl;
     std::ofstream outfile(upload_dir + request.file_name[r], std::ios::binary);
     outfile.write(request.form_data[i].data(), request.form_data[i].size());
     outfile.close();
@@ -46,7 +47,7 @@ void Response::Post(t_response & __unused res, HttpRequest & __unused request)
             this->Get(request, res.client_fd);
         else if (request.path.find(".php") != SIZE_T_MAX)
         {
-            std::string resp = run_cgi(request, res.config, "", checkPath);
+            std::string resp = run_cgi(request, res.config);
             send(res.client_fd, resp.c_str(), resp.length(), 0);
         }
         else if (request.path.find(".php") == SIZE_T_MAX)

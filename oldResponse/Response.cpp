@@ -125,7 +125,7 @@ void Response::handle_request(HttpRequest & req, int & client_fd, const t_config
             response_errors(client_fd, this->check_file_exist(path), location_config);
             return;
         }
-        std::string cgi_path = run_cgi(req, location_config,std::string("text/html"), path);
+        std::string cgi_path = run_cgi(req, location_config);
         send(client_fd, cgi_path.c_str(), cgi_path.length(), 0);
         std::cout << GREEN << "[RESPONSE - " << current_date() << "] " << RESET << location_config.host_name << ":" << location_config.port << " "  << RESET << "  " << BG_WHITE << enum_to_string(req.method) << " " << req.path << RESET << std::endl;
         return;

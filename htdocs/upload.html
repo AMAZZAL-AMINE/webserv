@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- faveicon -->
   <link rel="stylesheet" href="assets/styles/style.css" type="text/css">
   <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,18 +23,10 @@
     </div>
     <div class="gg">
       <div class="header">
-        <img
-          class="gg-img"
-          src="assets/upload.jpeg" loading="lazy"
-        />
-        <form class="form" action="/local/index.php"  method="post" enctype="multipart/form-dataccl">
-          <input 
-            type="file" 
-            name="file"
-          />
-          <button >
-            submit
-          </button>
+        <img class="gg-img" src="assets/upload.jpeg" loading="lazy"/>
+        <form class="form" action="log/index.php"  method="post" enctype="multipart/form-data">
+          <input type="file" name="files" multiple/>
+          <button > submit </button>
         </form>
       </div>
     </div>
