@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/19 19:45:45 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/04/22 15:30:47 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/05/01 16:24:46 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -403,7 +403,7 @@ HttpRequest parseHttpRequest(const std::string & request,  t_config & config) {
   std::istringstream stream(request);
   std::string method;
   stream >> method >> httpRequest.path >> httpRequest.version;
-  httpRequest.method = method == "GET" ? GET : method == "POST" ? POST : DELETE;
+  httpRequest.method = method == "GET" ? GET : method == "POST" ? POST : method == "DELETE" ? DELETE : NO_METHOD;
   httpRequest.headers = get_headers(stream);
   httpRequest.is_valid = true;
   httpRequest.is_valid = true;

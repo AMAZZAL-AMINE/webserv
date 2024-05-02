@@ -104,7 +104,7 @@ int Response::hasRedirection(HttpRequest &  __unused req, t_response & resp) {
     return 0;
 }
 
-void Response::changeLocation(HttpRequest & req, t_response & resp) {
+int Response::changeLocation(HttpRequest & req, t_response & resp) {
     std::string location_str = req.path;
     while (true) {
         if (isPathFindInLocation(location_str, resp.config)) {
@@ -113,12 +113,16 @@ void Response::changeLocation(HttpRequest & req, t_response & resp) {
             t_location location = getLocationConfig(location_str, resp.config);
             resp.config.Config = location.location;
             break;
-        }else if (!isPathFindInLocation(location_str, resp.config))
+        }else if (!isPathFindInLocation(location_str, resp.config)) {
             this->popTheLastWordFromPath(location_str);
-        else if (location_str == "/")
-            break;
+            if (location_str == "/" && !isPathFindInLocation(location_str, resp.config))
+                break;
+        }
     }
+    if (this->checkRequest(resp.request, resp) == 0)
+        return 0;
     if (this->hasRedirection(req, resp))
-        return;
+        return 0;
     this->locationHasAlias(req, resp, location_str);
+    return 1;
 }

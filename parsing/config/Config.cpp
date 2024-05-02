@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/04/25 18:36:27 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/05/02 15:12:13 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,6 +142,17 @@ void Config::parsConfigFile(std::string confFile) {
 
 const std::vector<t_config> &  Config::getConfig() const {
   return this->http_config;
+}
+
+void  Config::generateDefaultConfig() {
+  t_config config;
+  config.Config["server_name"] = "localhost";
+  config.Config["host"] = "192.10.1.1";
+  config.Config["port"] = "9090";
+  config.Config["root"] = ".";
+  config.Config["autoindex"] = "off";
+  config.Config["methods"] = "GET POST DELETE";
+  this->http_config.push_back(config);
 }
 
 Config::~Config() {}
