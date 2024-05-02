@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:44:16 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/04/29 17:02:49 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/05/01 18:50:54 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,14 @@
 #include "server/Server.hpp"
 
 int main(int argc, char __unused **argv) {
-  if (argc != 2) {
-    std::cerr << "Error : config file\n";
-    return 1;
-  }
   try {
-    SyntaxError(argv[1]);
+    if (argc >= 2)
+      SyntaxError(argv[1]);
     Server server;
-    server.parsConfigFile(argv[1]);
+    if (argc >= 2)
+      server.parsConfigFile(argv[1]);
+    else
+      server.generateDefaultConfig();
     server.runServer();
   } catch (std::exception & e) {
     std::cout << e.what() << std::endl;

@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/26 20:56:18 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/04/25 18:29:49 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/05/01 18:47:18 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ class Config {
     Config();
     void parsConfigFile(std::string confFile);
     const std::vector<t_config> & getConfig() const;
+    void  generateDefaultConfig();
     ~Config();
 };
 
