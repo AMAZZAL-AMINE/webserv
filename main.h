@@ -6,7 +6,7 @@
 /*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 10:53:39 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/04/25 18:35:22 by rouali           ###   ########.fr       */
+/*   Updated: 2024/05/02 18:51:25 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,7 @@ int _atoi_(std::string  str);
 void display_config(std::vector<std::vector<t_config> > http_config);
 HttpRequest parseHttpRequest(const std::string& request,  t_config & config);
 void clear_httprequest(HttpRequest & req);
-std::string  run_cgi(HttpRequest & __unused req, t_config & data , std::string content_type, std::string script_filename);
+std::string  run_cgi(HttpRequest & __unused req, t_config & data);
 void handle_delete_request(HttpRequest & __unused req, int & __unused client_fd, const t_config  & __unused data);
 std::string _itos_(int n);
 // void response_errors(int client_fd, int code, const t_config & data);
