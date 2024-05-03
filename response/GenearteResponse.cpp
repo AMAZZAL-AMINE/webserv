@@ -9,7 +9,6 @@ std::string Response::generate_response_time() {
     return buf;
 }
 
-
 std::string Response::getFileExtension(std::string & path) {
     std::string extension;
 
