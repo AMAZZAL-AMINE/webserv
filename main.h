@@ -37,6 +37,7 @@ enum E_METHOD
 #include <dirent.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include <algorithm> 
 
 typedef struct HttpRequest {
   E_METHOD method;

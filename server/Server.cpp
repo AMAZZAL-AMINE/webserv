@@ -1,6 +1,4 @@
 #include "Server.hpp"
-#include <algorithm> 
-#include <fcntl.h>
 
 Server::Server(){
 }
