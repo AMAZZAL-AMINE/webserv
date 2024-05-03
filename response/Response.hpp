@@ -46,6 +46,7 @@ class Response : public Config {
         int         checkRequest(std::string & request, t_response & response);
         int         checkMethods(HttpRequest & req, t_response & response);
         int         checkHeaders(HttpRequest & req, t_response & response);
+        void        sendFile(t_response & res, std::string & path, int & fd);
         ~Response();
 };
 

@@ -30,25 +30,42 @@ std::string Response::getMimeType(std::string & key) {
     return "text/plain";
 }
 
+void Response::sendFile(t_response & res, std::string & path, int & fd) {
+    std::string contentType = this->getFileExtension(path);
+    char buffer[BUFFER_SIZE_BIG];
+    int bytes_read;
+    while ((bytes_read = read(fd, buffer, BUFFER_SIZE_BIG)) != 0) {
+        ssize_t bytes_sent = send(res.client_fd, buffer, bytes_read, 0);
+        if (bytes_sent == -1)
+            break;
+        usleep(1500);
+    }
+    close(fd);
+}
 
 void Response::generateResponseFile(t_response & res, HttpRequest & req, int code, std::string  status) {
     std::string response;
     if (res.config.Config["root"].back() != '/')
         res.config.Config["root"] += "/";
     std::string path = res.config.Config["root"] + req.path;
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd == -1) {
+        this->errorResponse(res, req, 500, "Internal Server Error");
+        return;
+    }
+    struct stat stat_buf;
+    fstat(fd, &stat_buf);
     std::string extension = getFileExtension(path);
-    std::string body = readfile_(path);
     std::string type =  getMimeType(extension);
     std::string head = req.version + " " + _itos_(code) + " " + status + "\r\n";
     head += "Date: " + this->generate_response_time() + "\r\n";
     head += "Server: " + res.config.Config["server_name"] + "\r\n";
-    head += "Content-Length: " + _itos_(body.size()) + "\r\n";
+    head += "Content-Length: " + _itos_(stat_buf.st_size) + "\r\n";
     head += "Content-Type: " + type + "\r\n";
     head += "Connection : " + res.config.Config["Connection:"] + "\r\n";
     head += "\r\n";
-    response = head + body;
-    head.clear();
-    send(res.client_fd, response.c_str(), response.size(), 0);
+    send(res.client_fd, head.c_str(), head.size(), 0);
+    this->sendFile(res, path, fd);
 }
 
 void Response::generateResponseMovement(t_response & res,HttpRequest & req, std::string & path, std::string  status, int  code) {
@@ -79,6 +96,7 @@ std::string Response::readfile_(std::string path) {
         }
         file.close();
     }
+    std::cout << "SIZE: " << content.size() << std::endl;
     return content;
 }
 
