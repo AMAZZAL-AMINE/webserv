@@ -6,7 +6,7 @@
 /*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/05/02 18:51:05 by rouali           ###   ########.fr       */
+/*   Updated: 2024/05/03 19:41:02 by rouali           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,11 +49,11 @@ cgi::~cgi()
 
 std::string  cgi::fill_env(std::string SCRIPT_FILENAME, std::string CGI)
 {
-
+     std::string response;
     int status;
     int fd[2];
     pid_t pid;
-
+    int startTime = time(0);
     if (pipe(fd) == -1)
     {
         std::cout << "pipe error" << std::endl;
@@ -104,7 +104,21 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME, std::string CGI)
         {
             write(fd[1], body.c_str(), body.length());
         }
-        waitpid(pid, &status, 0);
+        int result;
+        while ((result = waitpid(pid, &status, WNOHANG)) == 0)
+        {
+            if (result == 0)
+            {
+                if ((time(0) - startTime) > 8)
+                {
+                    response = "HTTP/1.1 500 Internal Server Error";
+                    kill(pid, SIGKILL);
+                    close(fd[1]);
+                    return response;
+                }
+                sleep(1);
+            }
+        }
         if (WEXITSTATUS(status) != 0)
         {
             std::cout << "CGI ERROR" << std::endl;
@@ -112,7 +126,7 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME, std::string CGI)
         }
         close(fd[1]);
         char buffer[1024];
-        std::string response;
+       
         while (true)
         {
             int byte = read(fd[0], buffer, 1023);
@@ -162,9 +176,14 @@ std::string  run_cgi(HttpRequest & __unused req, t_config & data)
                REQUEST_METHOD, CONTENT_LENGTH, QUERY_STRING, SERVER_PROTOCOL,
                SERVER_SOFTWARE, SERVER_NAME, GATEWAY_INTERFACE, REDIRECT_STATUS);
     std::string script_excut = my_cgi.fill_env(SCRIPT_FILENAME, data.Config["cgi_path"]);
-    size_t pos = script_excut.find("\r\n\r\n");
-    std::string cgi_headers = script_excut.substr(0, pos);
-    script_excut.erase(0, pos + 4);
-    std::string html_res = "HTTP/1.1 200 OK\r\n"+cgi_headers +"\r\nContent-Length: " + std::to_string(script_excut.length()) +  "\r\n\r\n" + script_excut;
+    std::string html_res;
+    if (script_excut.find("500 Internal Server Error") == SIZE_T_MAX) {
+        size_t pos = script_excut.find("\r\n\r\n");
+        std::string cgi_headers = script_excut.substr(0, pos);
+        script_excut.erase(0, pos + 4);
+        html_res = "HTTP/1.1 200 OK\r\n"+cgi_headers +"\r\nContent-Length: " + std::to_string(script_excut.length()) +  "\r\n\r\n" + script_excut;
+    } else {
+        html_res = "";
+    }
     return html_res;
 }

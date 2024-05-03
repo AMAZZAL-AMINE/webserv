@@ -19,6 +19,7 @@ enum E_METHOD
   NO_METHOD
 };
 
+#include <signal.h>
 #include <iostream>
 #include <fstream>
 #include <sys/socket.h>
