@@ -45,7 +45,10 @@ void    Response::isDir(HttpRequest& request, int fd){
 void    Response::isFile(HttpRequest& request,int fd){
     if(request.path.find(".php") != std::string::npos) {
         std::string cgi_response = run_cgi(request, this->requests_map[fd].config);
-        send(fd, cgi_response.c_str(), cgi_response.length(), 0);
+        if (cgi_response == "")
+            this->errorResponse(requests_map[fd], request, 500, "Internal Server Error");
+        else
+            send(fd, cgi_response.c_str(), cgi_response.length(), 0);
     }else
        this->generateResponseFile(requests_map[fd], request, 200, "OK");
     

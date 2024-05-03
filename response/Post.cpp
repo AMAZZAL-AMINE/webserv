@@ -48,7 +48,10 @@ void Response::Post(t_response & __unused res, HttpRequest & __unused request)
         else if (request.path.find(".php") != SIZE_T_MAX)
         {
             std::string resp = run_cgi(request, res.config);
-            send(res.client_fd, resp.c_str(), resp.length(), 0);
+            if (resp == "")
+                this->errorResponse(res, request, 500, "Internal Server Error");
+            else
+                send(res.client_fd, resp.c_str(), resp.length(), 0);
         }
         else if (request.path.find(".php") == SIZE_T_MAX)
             this->Get(request, res.client_fd);

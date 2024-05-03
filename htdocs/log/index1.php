@@ -78,7 +78,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </body>
                     </html>
                     <?php
-                echo "File is valid, and was successfully uploaded.";
             }
             else
             {
