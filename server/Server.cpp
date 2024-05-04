@@ -7,7 +7,6 @@ void set_nonblock(int socket) {
     int flags = fcntl(socket, F_GETFL);
     flags |= O_NONBLOCK;
     fcntl(socket, F_SETFL, flags);
-
 }
 
 int Server::createServerFd(t_config& conf, struct sockaddr_in & address){
@@ -20,7 +19,7 @@ int Server::createServerFd(t_config& conf, struct sockaddr_in & address){
     set_nonblock(socketFd);
     setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_addr.s_addr = inet_addr(conf.Config["host_name"].c_str());
     address.sin_port = htons(_atoi_(conf.Config["port"]));
     if ( bind(socketFd, (struct sockaddr*)&address, sizeof(address)) < 0) {
         close(socketFd);
