@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/12/27 10:49:29 by mamazzal          #+#    #+#              #
-#    Updated: 2024/05/01 12:56:38 by mamazzal         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 NAME=webserv
 
 SRC= main.cpp parsing/config/Config.cpp atoi.cpp server/Server.cpp parsing/request/ParsRequest.cpp  cgi/cgi.cpp parsing/ConfigErrors.cpp \

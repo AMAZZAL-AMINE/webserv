@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   atoi.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/12/27 19:12:33 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/01/19 18:51:26 by mamazzal         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "main.h"
 
 int _atoi_(std::string  str)
@@ -32,7 +20,6 @@ int _atoi_(std::string  str)
   return result;
 }
 
-//intger to string
 std::string _itos_(int n)
 {
   std::string str;

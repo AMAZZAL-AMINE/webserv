@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   cgi.cpp                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/05/04 17:30:47 by mamazzal         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../main.h"
 
 cgi::cgi(std::string head, std::string body, std::string SCRIPT_NAME, std::string SCRIPT_FILENAME, std::string CONTENT_TYPE, std::string REQUEST_METHOD, std::string CONTENT_LENGTH, std::string QUERY_STRING, std::string SERVER_PROTOCOL, std::string SERVER_SOFTWARE, std::string SERVER_NAME, std::string GATEWAY_INTERFACE, std::string REDIRECT_STATUS)
@@ -92,7 +80,6 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME, std::string CGI)
         std::strcpy(av[1], SCRIPT_FILENAME.c_str());
         if (execve(CGI.c_str(), av, envp) == -1)
         {
-            //print cmd
             std::cout << "execve error" << std::endl;
             exit(127);
         }
