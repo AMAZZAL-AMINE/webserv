@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rouali <rouali@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:00:00 by rouali            #+#    #+#             */
-/*   Updated: 2024/05/03 19:41:02 by rouali           ###   ########.fr       */
+/*   Updated: 2024/05/04 17:30:47 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,6 @@ std::string  cgi::fill_env(std::string SCRIPT_FILENAME, std::string CGI)
         }
         if (WEXITSTATUS(status) != 0)
         {
-            std::cout << "CGI ERROR" << std::endl;
             return "";
         }
         close(fd[1]);
@@ -177,7 +176,7 @@ std::string  run_cgi(HttpRequest & __unused req, t_config & data)
                SERVER_SOFTWARE, SERVER_NAME, GATEWAY_INTERFACE, REDIRECT_STATUS);
     std::string script_excut = my_cgi.fill_env(SCRIPT_FILENAME, data.Config["cgi_path"]);
     std::string html_res;
-    if (script_excut.find("500 Internal Server Error") == SIZE_T_MAX) {
+    if (script_excut.find("500 Internal Server Error") == SIZE_T_MAX && script_excut != "") {
         size_t pos = script_excut.find("\r\n\r\n");
         std::string cgi_headers = script_excut.substr(0, pos);
         script_excut.erase(0, pos + 4);
