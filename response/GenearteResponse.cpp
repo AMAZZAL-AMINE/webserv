@@ -33,12 +33,15 @@ void Response::sendFile(t_response & res, std::string & path, int & fd) {
     std::string contentType = this->getFileExtension(path);
     char buffer[BUFFER_SIZE_BIG];
     int bytes_read;
-    while ((bytes_read = read(fd, buffer, BUFFER_SIZE_BIG)) != 0) {
+    while ((bytes_read = read(fd, buffer, BUFFER_SIZE_BIG)) > 0) {
+
         ssize_t bytes_sent = send(res.client_fd, buffer, bytes_read, 0);
         if (bytes_sent == -1)
             break;
         usleep(1500);
     }
+    if(bytes_read < 0)
+        std::cout << "Error reading file" << std::endl;
     close(fd);
 }
 
