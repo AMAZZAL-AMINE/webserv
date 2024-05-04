@@ -6,7 +6,7 @@
 /*   By: mamazzal <mamazzal@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/27 13:40:05 by mamazzal          #+#    #+#             */
-/*   Updated: 2024/05/02 15:12:13 by mamazzal         ###   ########.fr       */
+/*   Updated: 2024/05/04 17:08:34 by mamazzal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,8 +133,13 @@ void Config::parsConfigFile(std::string confFile) {
           config.Config[grepKey(line)] = grepValue(line, grepKey(line));
       }
     }
-    if (config.Config.size() > 0)
+    if (config.Config.size() > 0) {
+      if (config.Config["host_name"].empty())
+        config.Config["host_name"] = "127.0.0.1";
+      if (config.Config["port"].empty())
+        config.Config["port"] = "9090";
       this->http_config.push_back(config);
+    }
   }
   file.close();
 }
@@ -147,7 +152,7 @@ const std::vector<t_config> &  Config::getConfig() const {
 void  Config::generateDefaultConfig() {
   t_config config;
   config.Config["server_name"] = "localhost";
-  config.Config["host"] = "192.10.1.1";
+  config.Config["host_name"] = "127.0.0.1";
   config.Config["port"] = "9090";
   config.Config["root"] = ".";
   config.Config["autoindex"] = "off";
