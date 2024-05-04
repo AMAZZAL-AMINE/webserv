@@ -113,13 +113,35 @@ void    Server::receve_request(std::map<int, int> & __unused clients_map, fd_set
     }
 }
 
+std::vector<std::string> splitPorts(std::string & ports) {
+    std::vector<std::string> ports_vector;
+    std::string port;
+    for (size_t i = 0; i < ports.size(); i++) {
+        while (ports[i] == ' ' && i < ports.size())
+            i++;
+        while (ports[i] != ' ' && i < ports.size()) {
+            port += ports[i];
+            i++;
+        }
+        ports_vector.push_back(port);
+        port.clear();
+    }
+    return ports_vector;
+}
+
 void Server::runServer(){
     this->socklen = sizeof(this->address);
     std::map<int, int> clients_map;
     struct sockaddr_in  address;
     for(size_t i  = 0; i < this->http_config.size(); i++){
         t_config conf = this->http_config[i];
-        this->servers[this->createServerFd(conf, address)] = conf;
+        std::vector<std::string> ports = splitPorts(conf.Config["port"]);
+        for(size_t j = 0; j < ports.size(); j++){
+            conf.Config["port"] = ports[j];
+            int server_fd = createServerFd(conf, address);
+            this->servers[server_fd] = conf;
+        }
+
     }
     int max = *(std::max_element(this->server_fds.begin(),this->server_fds.end()));
     for (int i = 0; i < MAX_CLIENT; i++)
